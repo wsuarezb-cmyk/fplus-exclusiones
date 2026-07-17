@@ -1,0 +1,456 @@
+﻿@*@page "/exclusiones" *@
+@inject HelperModel _modelHelpe
+@inject IExclusionesService _exclusionesService
+@inject AuthenticationStateProvider authStateProvider
+@inject NavigationManager _nav
+
+@attribute [Authorize(Roles = "administrador, exclusiones")]
+
+
+<AuthorizeView>
+    <Authorized>
+        <div class="row justify-content-around" style="margin-top: -15px">
+            <div class="col ms-2 mb-1">
+                <div class="text-start">
+                    <label class="btn btn-sm btn-outline-dark" data-bs-toggle="offcanvas" data-bs-target="#sidebarOrders" aria-controls="offcanvasLeft" data-bs-placement="bottom" title="Abrir menú"><i class="oi oi-menu"></i> Menú</label>
+                </div>
+            </div>            
+        </div>
+
+
+        <div class="offcanvas offcanvas-start" tabindex="-1" id="sidebarOrders" aria-labelledby="offcanvasLeftLabel">
+            <div class="offcanvas-header">
+                <h5 id="offcanvasLeftLabel"></h5>
+                <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body">
+                <SidebarBusqueda title="Ordenes" _mensaje="@_mensaje" _isConsulting="@_isConsulting" _returnProductos="(e) => Consultar(e)"></SidebarBusqueda>
+            </div>
+        </div>    
+        <div class="container-fluid">
+            
+                <div class="row">
+                    
+                    <div class="col overflow-auto" style="height: 70vh">
+
+                        <Tabs OnShown="@(args => OnTabShownAsync(args))">
+                            <Tab Title="Individual" IsActive="true" >
+                                <Content>
+                                </Content>
+                            </Tab>
+                            <Tab Title="Masivo">
+                                <Content>
+                                </Content>
+                            </Tab>
+                            <Tab Title="Homologación">
+                                <Content>
+                                    <HelperTablaHomologacion></HelperTablaHomologacion>
+                                </Content>
+                            </Tab>
+                        </Tabs>
+
+                        @if (_homologacion)
+                        { 
+                            <table class="styled-table">
+                                <thead class="sticky-top z-0">
+                                    <tr>
+                                    @if (StatusMasivo)
+                                    {
+                                        <th class="text-center">
+                                            <input class="form-check-input" type="checkbox" id="checkAll" @onchange="EventArgs => { CheckAll(EventArgs.Value); }">
+                                        </th>
+                                    }
+                                    
+                                        <th class="text-center">Pais</th>
+                                        <th class="text-center">SellerId</th>
+                                        <th class="text-center">Order</th>
+                                        <th class="text-center">
+                                            @if (StatusMasivo)
+                                            {
+                                                <DropdownCustomFromList TItem="string" Title="KPI" Items="@Listado_kpi_name.Select(x => x.name).ToList()" @bind-SelectedValue="kpi_name_masivo"></DropdownCustomFromList>
+                                            }
+                                            else
+                                            {
+                                                <span>KPI</span>
+                                            }
+                                        </th>
+                                        <th class="text-center">
+                                            @if (StatusMasivo)
+                                            {
+                                                <DropdownCustomFromList TItem="string" Title="Motivo" Items="@Listado_motivos.Where(x => x.fk_kpi.Equals(Listado_kpi_name.Where(y => y.name == kpi_name_masivo).Select(y => y.id).FirstOrDefault())).Select(x => x.name).ToList()" @bind-SelectedValue="motivo_masivo"></DropdownCustomFromList>
+                                            }else
+                                            {
+                                                <span>Motivo</span>
+                                            }
+                                            
+                                        </th>
+                                        <th class="text-center">
+                                            
+                                            @if (StatusMasivo)
+                                            {
+                                                <div class="input-group input-group-sm">
+                                                    <span class="input-group-text bg-transparent text-white border border-0 fw-semibold" id="basic-addon1">Comentario</span>
+                                                    <input type="text" class="form-control form-control-sm" @bind-value="comentario_masivo" placeholder="Comentario">
+                                                </div>
+                                            }
+                                            else
+                                            {
+                                            <span>Comentario</span>
+                                        }
+                                        </th>
+                                        <th>Excluido</th>
+                                        <th class="text-center">
+                                            @if (StatusMasivo)
+                                            {
+                                                
+                                                <div class="col-2 d-flex align-items-center">
+                                                    <button class="btn btn-sm btn-success" @onclick="ComprobarFilasSeleccionadas">Aplicar</button>
+                                                </div>
+                                                
+                                            }
+                                        </th>
+
+                                    <th>
+                                        <img width="36" height="36" src="@flagUrl" />
+                                    </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (_modelExclusionesList.Count() > 0)
+                                    {
+                                        @foreach (var row in Paginador.ObtenerPagina())
+                                        {
+                                            <tr>
+                                            @if (StatusMasivo)
+                                            {
+                                                <td>
+                                                    <input class="form-check-input text-center" type="checkbox" id="@($"check{row}")" name="@($"check{row}")" value="@row" checked="@row.IsSelected" @onchange="EventArgs => { CheckRow(row, EventArgs.Value); }">
+                                                </td>
+                                            }
+                                            
+                                                <td class="text-center">@row.pais</td>
+                                                <td class="text-center">@row.sellerId</td>
+                                                <td class="text-center">@row.deliveryOrderNumber</td>
+                                                <td class="text-center">
+                                                    <DropdownCustomFromList TItem="string" Items="@Listado_kpi_name.Select(x => x.name).ToList()" @bind-SelectedValue="row.kpi_name"></DropdownCustomFromList>
+                                                </td>
+                                                <td class="text-center">
+                                                    <DropdownCustomFromList TItem="string" Items="@Listado_motivos.Where(x => x.kpi_name == row.kpi_name).Select(x => x.name).ToList()" @bind-SelectedValue="row.motivo"></DropdownCustomFromList>
+                                                </td>
+                                                <td class="text-center"><input type="text" class="form-control form-control-sm mt-1" @bind="row.comentario" placeholder="Comentario"></td>
+                                                <td>@row.Excluido</td>
+                                                <td></td>
+                                                <td>
+                                                    <button class="btn btn-sm btn-danger" @onclick="(() => EliminarOrden(row))"><i class="bi bi-trash"></i></button>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+
+                            </table>   
+
+                        }
+                    </div>
+                    <br />
+                </div>
+                @if (_modelExclusionesList.Count() > 0)
+                {
+                    <div class="container-fluid text-center my-3 p-0">
+                        <div class="row justify-content-between">
+                            <div class="col-md-auto">
+                                <div class="input-group input-group-sm">
+                                    <span class="input-group-text" id="basic-addon1">Elementos por página:</span>
+                                    <select id="elementosPorPagina" class="form-select" @onchange="CambiarElementosPorPagina" value="@ElementosSeleccionados">
+                                        <option value="100" selected>100</option>
+                                        <option value="250">250</option>
+                                        <option value="500">500</option>
+                                    </select>
+                                    <span class="input-group-text">Página @Paginador.PaginaActual de @Paginador.TotalPaginas</span>
+                                </div>
+                            </div>
+                            <div class="col-md-auto">
+                                <nav aria-label="Navigation pages">
+                                    <ul class="pagination">
+                                        <li class="page-item @(Paginador.PaginaActual == 1 ? "disabled" : "")">
+                                            <button class="page-link" @onclick="IrAPrimeraPagina">Primero</button>
+                                        </li>
+                                        <li class="page-item @(Paginador.PaginaActual == 1 ? "disabled" : "")">
+                                            <button class="page-link" @onclick="RetrocederPagina">Anterior</button>
+                                        </li>
+                                        @foreach (var numeroPagina in ObtenerPaginasParaMostrar())
+                                        {
+                                            var currentValue = numeroPagina;
+                                            <li class="page-item @(numeroPagina == Paginador.PaginaActual ? "active" : "")">
+                                                <button class="page-link" id="@currentValue" @onclick="@(() => IrAPagina(currentValue))">@numeroPagina</button>
+                                            </li>
+                                        }
+                                        <li class="page-item @(Paginador.PaginaActual == Paginador.TotalPaginas ? "disabled" : "")">
+                                            <button class="page-link" @onclick="AvanzarPagina">Siguiente</button>
+                                        </li>
+                                        <li class="page-item @(Paginador.PaginaActual == Paginador.TotalPaginas ? "disabled" : "")">
+                                            <button class="page-link" @onclick="IrAUltimaPagina">Último</button>
+                                        </li>
+                                    </ul>
+                                </nav>
+                            </div>
+                            <div class="col-md-auto">
+                                <button class="btn btn-sm btn-primary" disabled="@_isConsulting" @onclick="() => GuardarOrdenes(context.User.Identity.Name)">Guardar</button>
+                            </div>                  
+                        </div>
+                    </div>
+                }
+
+            
+        </div>
+        
+  
+        <ToastCustom Message="@mensajeResponse" Title="@TitleToast" />
+
+        <button class="btn btn-danger fixed-bottom mb-2 ms-2" style="width: 70px;" @onclick='() => _nav.NavigateTo("/exclusiones", true)'><i class="oi oi-arrow-thick-left"></i></button>
+    </Authorized>
+</AuthorizeView>
+@code {
+    List<ExclusionesModel> _modelExclusionesList { get; set; } = new();
+    bool _isConsulting { get; set; }
+    string _mensaje { get; set; }
+    string mensajeResponse { get; set; }
+    bool StatusMasivo { get; set; }
+    bool _homologacion { get; set; } = true;
+    string kpi_name_masivo { get; set; }
+    string motivo_masivo { get; set; }
+    string comentario_masivo { get; set; }
+    string TitleToast { get; set; }
+    ExclusionesModel _modelExclusiones { get; set; } = new();
+    [Parameter] public string paisSeleccionado { get; set; }
+    [Parameter] public string tipoSeleccionado { get; set; }
+    [Parameter] public string flagUrl { get; set; }
+
+    List<ExclusionesKpiModel> Listado_kpi_name = new();
+    List<ExclusionesMotivoModel> Listado_motivos = new();
+
+    Paginacion<ExclusionesModel> Paginador { get; set; } = new(new List<ExclusionesModel> { }, 1);
+    int ElementosSeleccionados { get; set; }
+    int ElementosPorPagina { get; set; } = 100;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        //_modelExclusionesList.Clear();
+        Listado_kpi_name = await _exclusionesService.GetAllKpiAsync();
+        Listado_motivos = await _exclusionesService.GetAllMotivoAsync();
+    }
+
+    public async Task Consultar(string productos)
+    {
+        _mensaje = "Consultando datos, por favor espere...";
+        _isConsulting = true;
+        _modelExclusionesList = new();
+
+        // Dividir los enlaces de imágenes por saltos de línea
+        List<string> ordenes = productos.Split(new string[] { "\n", "\r\n", "," }, StringSplitOptions.RemoveEmptyEntries)
+        .Select((x) => x.Trim()).Select((x) => Regex.Replace(x, "[^0-9]", "")).ToList();
+
+        var total = ordenes.Count;
+
+        var division = 500;
+
+        var vueltas = Math.Ceiling((decimal)total / division);
+
+
+        List<Task> tasks = new List<Task>();
+        for (var i = 0; i < vueltas; i++)
+        {
+            int maxConcurrency = 5; // Número máximo de solicitudes concurrentes
+            SemaphoreSlim semaphore = new SemaphoreSlim(maxConcurrency);
+
+            await semaphore.WaitAsync();
+            tasks.Add(ConsultarSoloOrdenes(ordenes.Skip(i * division).Take(division).ToList(), semaphore));
+        }
+
+        await Task.WhenAll(tasks);
+
+        ElementosSeleccionados = ElementosPorPagina;
+        Paginador = new Paginacion<ExclusionesModel>(_modelExclusionesList, ElementosSeleccionados);
+
+        _mensaje = "Consulta finalizada...";
+        _isConsulting = false;
+
+    }
+
+    async Task ConsultarSoloOrdenes(List<string> ordenes, SemaphoreSlim semaphore)
+    {
+        var result = await _exclusionesService.ConsultarOrdenesBigQ(ordenes, paisSeleccionado, semaphore);
+        _modelExclusionesList.AddRange(result ?? new List<ExclusionesModel>());
+    }
+
+    private async Task GuardarOrdenes(string usuario)
+    {
+        _modelHelper.mensaje = "Guardando los datos, por favor espere...";
+        _modelHelper.isConsulting = true;
+        TitleToast = "";
+
+        var count_motivo = _modelExclusionesList.Count(x => string.IsNullOrEmpty(x.motivo));
+        var count_kpi    = _modelExclusionesList.Count(x => string.IsNullOrEmpty(x.kpi_name));
+        if (count_motivo == 0 && count_kpi == 0)
+        {
+            _modelExclusionesList.ForEach((x) => x.responsable = usuario);
+            _modelExclusionesList.ForEach((x) => x.tipo_exclusion = tipoSeleccionado);
+            var response = await _exclusionesService.SaveChangesAsync(_modelExclusionesList.Where(x => !x.Excluido.Contains(x.kpi_name)).ToList(), paisSeleccionado);
+            mensajeResponse = response;
+            TitleToast = "Success";
+        }
+        else
+        {
+            mensajeResponse = $"Faltan campos: {count_kpi} fila(s) sin KPI, {count_motivo} fila(s) sin Motivo.";
+            TitleToast = "Warning";
+        }
+
+        _modelHelper.mensaje = "";
+        _modelHelper.isConsulting = false;
+
+    }
+
+    private void ComprobarFilasSeleccionadas()
+    {
+        _modelExclusionesList.Where(x => x.IsSelected == true).ToList()
+        .ForEach(row =>
+        {
+            row.motivo = motivo_masivo;
+            row.kpi_name = kpi_name_masivo;
+            if (comentario_masivo != string.Empty) row.comentario = comentario_masivo;
+            //row.IsSelected = false;
+        });
+
+    }
+
+    private void EliminarOrden(ExclusionesModel row)
+    {
+        _modelExclusionesList.Remove(row);
+    }
+
+    private void CheckAll(object checkValue)
+    {
+        foreach (var row in _modelExclusionesList)
+        {
+            row.IsSelected = (bool)checkValue;
+        }        
+    }
+
+    private void CheckRow(ExclusionesModel row, object checkedValue)
+    {
+        row.IsSelected = (bool)checkedValue;
+    }
+
+    private void OnTabShownAsync(TabsEventArgs args)
+    {
+        var activeTabTitle = args.ActiveTabTitle;
+        if(activeTabTitle == "Masivo")
+        {
+            StatusMasivo = true;
+            _homologacion = true;
+        }
+        else if (activeTabTitle == "Individual")
+        {
+            StatusMasivo = false;
+            _homologacion = true;
+        }
+        else if (activeTabTitle == "Homologación")
+        {
+            _homologacion = false;
+        }
+    }
+
+    private void ActivarMasivo(bool status)
+    {
+        StatusMasivo = status;        
+    }
+
+
+    private void IrAPagina(int numeroPagina)
+    {
+        Paginador.PaginaActual = numeroPagina;
+    }
+
+    private void AvanzarPagina()
+    {
+        Paginador.PaginaSiguiente();
+    }
+
+    private void RetrocederPagina()
+    {
+        Paginador.PaginaAnterior();
+    }
+
+    private void IrAPrimeraPagina()
+    {
+        Paginador.PaginaActual = 1;
+    }
+
+    private void IrAUltimaPagina()
+    {
+        Paginador.PaginaActual = Paginador.TotalPaginas;
+    }
+
+    private void CambiarElementosPorPagina(ChangeEventArgs e)
+    {
+        ElementosSeleccionados = int.Parse(e.Value.ToString());
+        Paginador = new Paginacion<ExclusionesModel>(_modelExclusionesList, ElementosSeleccionados);
+    }
+
+    private IEnumerable<int> ObtenerPaginasParaMostrar()
+    {
+        const int maximoNumerosVisibles = 3;
+        int inicio = Math.Max(1, Paginador.PaginaActual - 2);
+        int fin = Math.Min(Paginador.TotalPaginas, inicio + maximoNumerosVisibles - 1);
+
+        if (fin - inicio + 1 < maximoNumerosVisibles)
+        {
+            inicio = Math.Max(1, fin - maximoNumerosVisibles + 1);
+        }
+
+        return Enumerable.Range(inicio, fin - inicio + 1);
+    }
+
+    public class Paginacion<T>
+    {
+        public List<T> Items { get; set; }
+        public int PaginaActual { get; set; }
+        public int TotalPaginas { get; set; }
+        public int ElementosPorPagina { get; set; }
+        public int TotalElementos { get; set; }
+
+        public Paginacion(List<T> items, int elementosPorPagina)
+        {
+            Items = items;
+            ElementosPorPagina = elementosPorPagina;
+            PaginaActual = 1;
+            TotalElementos = items.Count;
+            TotalPaginas = (int)Math.Ceiling(TotalElementos / (double)ElementosPorPagina);
+        }
+
+        public List<T> ObtenerPagina()
+        {
+            return Items
+                .Skip((PaginaActual - 1) * ElementosPorPagina)
+                .Take(ElementosPorPagina)
+                .ToList();
+        }
+
+        public void PaginaSiguiente()
+        {
+            if (PaginaActual < TotalPaginas)
+            {
+                PaginaActual++;
+            }
+        }
+
+        public void PaginaAnterior()
+        {
+            if (PaginaActual > 1)
+            {
+                PaginaActual--;
+            }
+        }
+    }
+}

@@ -1,0 +1,27 @@
+﻿<div class="row gy-2 text-center my-auto">    
+    <div class="col-12 form-floating">
+        <textarea @bind="_productos" rows="15" class="form-control h-auto" id="floatingTextarea"></textarea>
+        <label class="ms-2" for="floatingTextarea" style="margin-top: -6px">@title</label>
+    </div>
+
+    <div class="col-12 align-self-center">
+        <button style="font-size: 0.7rem; font-weight:500;" class="btn btn-sm btn-success w-100" disabled="@_isConsulting" @onclick="Consultar">Consultar productos
+            @if (_isConsulting){ <SpinnerLoading></SpinnerLoading> }
+        </button>
+    </div>    
+    <p class="m-1">@_mensaje</p>
+</div>
+
+@code {
+    public string _productos { get; set; }
+    [Parameter] public string title { get; set; }
+    [Parameter] public string _mensaje { get; set; }
+    [Parameter] public bool _isConsulting { get; set; }
+    [Parameter] public EventCallback<string> _returnProductos { get; set; }
+
+
+    async Task Consultar()
+    {
+        await _returnProductos.InvokeAsync(_productos); 
+    }
+}

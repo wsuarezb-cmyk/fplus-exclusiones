@@ -1,0 +1,23 @@
+## ── Archivos sin uso (archivados localmente) ──────────────────────────────
+_unused/
+
+## ── Credenciales y configuración sensible ─────────────────────────────────
+mycreds.json
+ftp.json
+appsettings.Development.json
+
+## ── .NET build outputs ─────────────────────────────────────────────────────
+bin/
+obj/
+*.user
+
+## ── Visual Studio / VS Code ────────────────────────────────────────────────
+.vs/
+.vscode/
+*.suo
+*.userosscache
+*.sln.docstates
+
+## ── Logs y temporales ──────────────────────────────────────────────────────
+*.log
+Error.txt

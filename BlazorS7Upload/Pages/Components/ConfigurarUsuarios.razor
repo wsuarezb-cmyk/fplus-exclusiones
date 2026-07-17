@@ -1,0 +1,168 @@
+﻿@inject IUserRolesService _userRoles
+@inject AuthenticationStateProvider authStateProvider
+
+@attribute [Authorize(Roles = "administrador, supervisor, configuracion")]
+
+<h3 class="text-center">Configurar Usuarios</h3>
+
+<div class="container">
+    @if (_usersWithRoles != null)
+    {
+        <div class="input-group input-group-sm mb-3 w-50">
+            <span class="input-group-text" id="basic-addon1">Email</span>
+            <input type="text" class="form-control" placeholder="" @bind="_buscarEmail">
+            <button class="btn btn-success" type="button" @onclick="BuscarEmail">Buscar</button>
+            <button class="btn btn-warning" type="button" @onclick="LimpiarBusqueda">Limpiar</button>
+        </div>
+        <div class="overflow-auto" style="height: 70vh">
+            <table class="styled-table col">
+                <thead class="sticky-top z-0">
+                    <tr>
+                        <th>Email</th>
+                        <th>Roles asignados</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var kvp in _usersFiltered)
+                    {
+                        <tr>
+                            <td>@kvp.Key</td>
+                            <td>@string.Join(", ", kvp.Value.Where(r => r != null))</td>
+                            <td class="text-end">
+                                <button class="btn btn-sm btn-primary" title="Editar roles"
+                                        data-bs-toggle="offcanvas" data-bs-target="#off_"
+                                        @onclick="() => AbrirEdicion(kvp.Key, kvp.Value)">
+                                    <i class="bi bi-pencil-square"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+    else
+    {
+        <SpinnerLoading></SpinnerLoading>
+    }
+</div>
+
+<!-- Offcanvas edicion de roles -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="off_" style="width: 35%">
+    <div class="offcanvas-header">
+        <h5>Editar roles — @_currentEditUser</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+    </div>
+    <div class="offcanvas-body">
+        <div class="container">
+            <div class="row">
+                <div class="col-6">
+                    <h5>Por asignar</h5>
+                    <ul class="list-group">
+                        @foreach (var rol in _rolesVisibles)
+                        {
+                            if (_currentEditRoles == null || !_currentEditRoles.Contains(rol))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    @rol
+                                    <button class="btn btn-sm btn-primary"
+                                            @onclick="() => AgregarRol(_currentEditUser, rol)">
+                                        <i class="bi bi-plus-lg"></i>
+                                    </button>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+                <div class="col-6">
+                    <h5>Asignados</h5>
+                    <ul class="list-group">
+                        @if (_currentEditRoles != null)
+                        {
+                            @foreach (var rol in _currentEditRoles.Where(r => r != null))
+                            {
+                                <li class="list-group-item d-flex justify-content-between">
+                                    @rol
+                                    <button class="btn btn-sm btn-danger"
+                                            @onclick="() => EliminarRol(_currentEditUser, rol)">
+                                        <i class="bi bi-trash"></i>
+                                    </button>
+                                </li>
+                            }
+                        }
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@code {
+    private string _buscarEmail;
+    private Dictionary<string, List<string>> _usersWithRoles;
+    private Dictionary<string, List<string>> _usersFiltered;
+    private List<string> _rolesVisibles;
+    private string _currentEditUser;
+    private List<string> _currentEditRoles;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var rawData = await _userRoles.GetListRolesAndUser();
+        _usersWithRoles = rawData
+            .GroupBy(x => x.email)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.nombre_rol).ToList());
+
+        var allRoles = await _userRoles.GetListRoles();
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        var user = authState.User;
+
+        // Filtrar roles visibles segun el rol del usuario actual
+        var hiddenRoles = new List<string>();
+        if (user.IsInRole("administrador")) { /* ve todo */ }
+        else if (user.IsInRole("supervisor")) hiddenRoles.Add("administrador");
+        else if (user.IsInRole("configuracion")) { hiddenRoles.Add("administrador"); hiddenRoles.Add("supervisor"); }
+        else { hiddenRoles.AddRange(new[] { "administrador", "supervisor", "configuracion" }); }
+
+        _rolesVisibles = allRoles.Where(r => !hiddenRoles.Contains(r)).ToList();
+        _usersFiltered = _usersWithRoles;
+    }
+
+    private void AbrirEdicion(string email, List<string> roles)
+    {
+        _currentEditUser = email;
+        _currentEditRoles = new List<string>(roles);
+    }
+
+    private async void AgregarRol(string email, string rol)
+    {
+        if (_usersWithRoles.ContainsKey(email) && !_usersWithRoles[email].Contains(rol))
+            _usersWithRoles[email].Add(rol);
+        _currentEditRoles = _usersWithRoles[email];
+        await _userRoles.InsertRolByUser(email, rol);
+        StateHasChanged();
+    }
+
+    private async void EliminarRol(string email, string rol)
+    {
+        if (_usersWithRoles.ContainsKey(email))
+            _usersWithRoles[email].Remove(rol);
+        _currentEditRoles = _usersWithRoles[email];
+        await _userRoles.DeleteRolByUser(email, rol);
+        StateHasChanged();
+    }
+
+    private void BuscarEmail()
+    {
+        _usersFiltered = string.IsNullOrEmpty(_buscarEmail)
+            ? _usersWithRoles
+            : _usersWithRoles.Where(kvp => kvp.Key.Contains(_buscarEmail, StringComparison.OrdinalIgnoreCase))
+                             .ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+    }
+
+    private void LimpiarBusqueda()
+    {
+        _buscarEmail = string.Empty;
+        _usersFiltered = _usersWithRoles;
+    }
+}

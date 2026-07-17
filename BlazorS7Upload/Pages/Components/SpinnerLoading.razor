@@ -1,0 +1,9 @@
+﻿<div class="d-flex align-items-center justify-content-center">
+    <span> <strong class="align-middle">@Title...</strong></span>
+    <span class="spinner-border @Class" role="status"></span>
+</div>
+
+@code{
+    [Parameter] public string Title {get; set;} = "Loading";
+    [Parameter] public string Class { get; set; } = "";
+}

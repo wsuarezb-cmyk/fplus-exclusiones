@@ -1,0 +1,19 @@
+﻿@page "/logout"
+@inject NavigationManager navManager
+@inject IWebHostEnvironment _env
+
+@code {
+    protected override void OnInitialized()
+    {
+        if (_env.IsProduction())
+        {
+            // IAP logout: limpia la cookie de sesión de Google IAP
+            navManager.NavigateTo("/_gcp_iap/clear_login_cookie", forceLoad: true);
+        }
+        else
+        {
+            // En desarrollo no hay sesión que cerrar
+            navManager.NavigateTo("/", forceLoad: true);
+        }
+    }
+}

@@ -1,0 +1,25 @@
+﻿@inherits LayoutComponentBase
+@using BlazorS7Upload.Pages
+
+<PageTitle>Pandora</PageTitle>
+
+
+<header class="sticky-top">
+    <AuthorizeView>
+        <Authorized>
+            <NavMenu />
+        </Authorized>
+    </AuthorizeView>    
+</header>
+
+
+<div class="container-fluid" role="main">
+    <AuthorizeView>
+        <NotAuthorized>
+            <Login></Login>
+        </NotAuthorized>
+    </AuthorizeView>
+
+    @Body
+</div>
+

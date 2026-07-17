@@ -1,0 +1,33 @@
+﻿@page "/"
+
+<PageTitle>Pandora</PageTitle>
+
+<AuthorizeView>
+    <Authorized>
+        <div class="welcome-container">
+            <div class="welcome-card">
+                <div class="card-header-custom">
+                    <h3 class="welcome-title">
+                        Bienvenido <span class="user-name">@context.User.Identity.Name</span>
+                    </h3>
+                </div>
+                
+                <div class="card-body-custom">
+                    <p class="welcome-text">
+                        Estamos encantados de tenerte aquí en nuestra plataforma 
+                        <span class="highlight-text">Pandora</span>. Explora las herramientas y recursos 
+                        que ponemos a tu disposición para hacer tu experiencia más productiva y efectiva.
+                    </p>
+                    
+                    <p class="closing-text">
+                        ¡Bienvenido y que tengas un tiempo productivo!
+                    </p>
+                </div>
+                
+                <div class="card-footer-custom">
+                    <div class="gaia-logo">Pandora</div>
+                </div>
+            </div>
+        </div>
+    </Authorized>
+</AuthorizeView>

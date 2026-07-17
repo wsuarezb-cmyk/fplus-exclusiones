@@ -1,0 +1,35 @@
+﻿@using System.Collections.Generic
+
+@typeparam TItem
+
+<div class="input-group input-group-sm">
+    <span class="input-group-text bg-transparent text-white border border-0 fw-semibold" id="basic-addon1">@Title</span>
+    <select class="form-select form-select-sm border border-0" @onchange="OnChange">
+        <option value=""></option>
+        @foreach (TItem item in Items)
+        {
+            <option value="@item" selected="@(SelectedValue?.Equals(item) == true)">@item</option>
+        }
+    </select>
+</div>
+
+
+@code {
+    [Parameter]
+    public List<TItem> Items { get; set; }
+
+    [Parameter]
+    public TItem SelectedValue { get; set; }
+
+    [Parameter]
+    public EventCallback<TItem> SelectedValueChanged { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+    private async Task OnChange(ChangeEventArgs e)
+    {
+        SelectedValue = (TItem)Convert.ChangeType(e.Value, typeof(TItem));
+        await SelectedValueChanged.InvokeAsync(SelectedValue);
+    }
+}

@@ -1,0 +1,64 @@
+﻿@if (Title == "Success")
+{
+    <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.BottomRight" AutoHide="true">
+    </Toasts>
+}
+
+@if (Title == "Danger")
+{
+    <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.BottomRight" AutoHide="true">
+    </Toasts>
+}
+
+@if (Title == "Warning")
+{
+    <Toasts class="p-3" Messages="messages" Placement="ToastsPlacement.BottomRight" AutoHide="true">
+    </Toasts>
+}
+
+@code {
+    [Parameter]
+    public string Message { get; set; }
+
+    [Parameter]
+    public string Title { get; set; }
+
+
+    private List<ToastMessage> messages = new List<ToastMessage>();
+
+    protected override void OnParametersSet()
+    {
+        if (Title == "Success")
+        {
+            messages.Add(new ToastMessage
+                {
+                    Type = ToastType.Success,
+                    Title = "Success",
+                    Message = Message
+                });
+        }
+
+        
+
+        if (Title == "Warning")
+        {
+            messages.Add(new ToastMessage
+                {
+                    Type = ToastType.Warning,
+                    Title = "Warning",
+                    Message = Message
+                });
+        }
+
+
+        if (Title == "Danger")
+        {
+            messages.Add(new ToastMessage
+                {
+                    Type = ToastType.Danger,
+                    Title = "Danger",
+                    Message = Message
+                });
+        }
+    }
+}

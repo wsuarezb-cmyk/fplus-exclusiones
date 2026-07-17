@@ -1,0 +1,99 @@
+﻿@inject IUserRolesService _userRoles
+@inject NavigationManager _nav
+
+@attribute [Authorize(Roles = "administrador")]
+
+<div class="container p-5">
+@if(rolesData != null)
+{
+    <div class="card m-auto shadow" style="width: 400px">
+    <div class="card-header">
+        <h3>Agregar rol</h3>
+    </div>
+    <div class="card-body">
+        <div class="row d-flex align-items-center">
+            <div class="col-8">
+                <input class="form-control" type="text" id="nuevo_rol" @bind="_modelRol" />
+            </div>
+            <div class="col-4">
+                <button class="btn btn-primary" @onclick="() => AgregarRol(_modelRol)">Agregar</button>
+            </div>
+        </div>
+        <table class="styled-table col-12 mt-3">
+            <thead>
+                <tr>
+                    <th>Roles</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in rolesData)
+                {
+                    <tr>
+                        <td>@row</td>                            
+                        <td class="text-center">
+                            <button class="btn btn-sm btn-danger" @onclick="(() => EliminarRol(row))"><i class="bi bi-trash"></i></button>
+                        </td>
+                    </tr>
+                }
+
+            </tbody>
+
+        </table>
+    </div>       
+        
+    </div>
+}
+else
+{
+    <SpinnerLoading></SpinnerLoading>
+}
+
+</div>
+
+@code {
+    List<string> rolesData { get; set; }
+    string _modelRol { get; set; }
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ListarRoles(1);
+    }
+
+    async Task ListarRoles(long id)
+    {
+        if(id > 0)
+        {
+            rolesData = await _userRoles.GetListRoles();
+        }
+
+    }
+
+    async Task AgregarRol(string rol)
+    {
+        long id = 0;
+        if (rol != null)
+        {
+            id = await _userRoles.InsertRol(rol);
+        }
+
+        await ListarRoles(id);
+        _modelRol = string.Empty;
+
+    }
+
+    async Task EliminarRol(string rol)
+    {
+        long id = 0;
+        if (rol != null)
+        {
+            id = await _userRoles.DeleteRol(rol);
+        }
+
+        await ListarRoles(id);
+    }
+
+    
+
+
+}

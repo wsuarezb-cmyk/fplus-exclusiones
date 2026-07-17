@@ -1,0 +1,72 @@
+﻿@page "/configuracion"
+@inject NavigationManager _nav
+
+<PageTitle>Configuraciones</PageTitle>
+
+@if (visibleList == true)
+{
+    <div class="container p-5">
+        <div class="card m-auto shadow" style="width: 400px">
+            <div class="card-header">
+                Menu configuración
+            </div>
+            <div class="card-body">
+                <div class="list-group">
+                    <AuthorizeView Roles="administrador, configuracion, supervisor">
+                        <Authorized>
+                            <a class="list-group-item list-group-item-action" @onclick='() => CambiarComponente("Configurar usuarios")' role="button">
+                                Configurar usuarios
+                            </a>
+                        </Authorized>
+                    </AuthorizeView>
+
+                    <AuthorizeView Roles="administrador">
+                        <Authorized>
+                            <a class="list-group-item list-group-item-action" @onclick='() => CambiarComponente("Añadir Roles")' role="button">
+                                Añadir Roles
+                            </a>
+                        </Authorized>
+                    </AuthorizeView>
+
+
+
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+
+
+@if (mostrarComponent == "Añadir Roles")
+{
+    <ConfigurarRoles></ConfigurarRoles>
+}
+@if (mostrarComponent == "Configurar usuarios")
+{
+    <ConfigurarUsuarios></ConfigurarUsuarios>
+}
+@if (mostrarComponent != string.Empty)
+{
+    <div class="text-center">
+        <br>
+        <button class="btn btn-danger" style="width: 100px" @onclick="Volver"> Volver</button>
+    </div>
+}
+
+
+@code {
+    public string mostrarComponent { get; set; } = string.Empty;
+    public bool visibleList { get; set; } = true;
+
+    void CambiarComponente(string tipo)
+    {
+        mostrarComponent = tipo;
+        visibleList = false;
+    }
+
+    void Volver()
+    {
+        _nav.NavigateTo("/configuracion", true);
+    }
+}
