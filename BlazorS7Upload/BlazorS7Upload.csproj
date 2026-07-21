@@ -19,9 +19,9 @@
     <Content Remove="ftp.json" />
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="Exists('ftp.json')">
     <None Include="ftp.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
 
