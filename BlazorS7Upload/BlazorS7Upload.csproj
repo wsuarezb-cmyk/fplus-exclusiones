@@ -53,14 +53,16 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Content Update="appsettings.Development.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <!-- appsettings.json: copiado solo si existe (en Docker viene de Secret Manager) -->
+    <Content Update="appsettings.json" Condition="Exists('appsettings.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="appsettings.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <!-- Archivos de runtime montados por Secret Manager / solo locales -->
+    <Content Update="appsettings.Development.json" Condition="Exists('appsettings.Development.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Update="mycreds.json">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    <Content Update="mycreds.json" Condition="Exists('mycreds.json')">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>
 
