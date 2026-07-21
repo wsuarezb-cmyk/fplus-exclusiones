@@ -1,10 +1,8 @@
 using BlazorS7Upload.Authentication;
 using BlazorS7Upload.Data;
-using BlazorS7Upload.DB;
 using BlazorS7Upload.Interfaces;
 using BlazorS7Upload.Models;
 using Microsoft.AspNetCore.Components.Authorization;
-using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -12,6 +10,10 @@ if (builder.Environment.IsDevelopment())
 {
     builder.WebHost.UseUrls("http://localhost:5051", "https://localhost:444");
 }
+
+// En Cloud Run los secretos se montan fuera de /app para no ocultar la DLL publicada.
+var appSettingsPath = Environment.GetEnvironmentVariable("AppSettingsPath") ?? "/config/appsettings.json";
+builder.Configuration.AddJsonFile(appSettingsPath, optional: true, reloadOnChange: false);
 
 // Add services to the container.
 builder.Services.AddResponseCompression();
@@ -24,12 +26,6 @@ builder.Services.AddServerSideBlazor().AddCircuitOptions(options =>
 
 // Necesario para leer headers HTTP en Blazor Server (IAP)
 builder.Services.AddHttpContextAccessor();
-
-// Configurar PostgreSQL
-builder.Services.AddDbContext<PSqlComplianceDbContext>(options =>
-{
-    options.UseNpgsql(builder.Configuration.GetConnectionString("db_posgreSQLCompliance"));
-});
 
 builder.Services.AddBlazorBootstrap();
 builder.Services.AddScoped<AuthenticationStateProvider, IapAuthenticationStateProvider>();
