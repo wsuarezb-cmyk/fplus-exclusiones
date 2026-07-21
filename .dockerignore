@@ -1,0 +1,29 @@
+## ── Git ────────────────────────────────────────────────────────────────────
+.git/
+.gitignore
+
+## ── Build outputs (no se necesitan, el SDK compila dentro del contenedor) ──
+**/bin/
+**/obj/
+
+## ── Archivos sin uso (archivados) ──────────────────────────────────────────
+**/_unused/
+
+## ── Visual Studio / VS Code ────────────────────────────────────────────────
+**/.vs/
+**/.vscode/
+**/*.user
+
+## ── Credenciales y configuración sensible ─────────────────────────────────
+## Estos se montan desde Secret Manager en Cloud Run
+**/mycreds.json
+**/ftp.json
+**/appsettings.Development.json
+
+## ── Logs y temporales ──────────────────────────────────────────────────────
+**/*.log
+**/Error.txt
+
+## ── Docker ─────────────────────────────────────────────────────────────────
+Dockerfile
+.dockerignore
