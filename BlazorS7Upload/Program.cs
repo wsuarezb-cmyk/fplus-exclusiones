@@ -8,7 +8,10 @@ using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.WebHost.UseUrls("http://localhost:5051", "https://localhost:444");
+if (builder.Environment.IsDevelopment())
+{
+    builder.WebHost.UseUrls("http://localhost:5051", "https://localhost:444");
+}
 
 // Add services to the container.
 builder.Services.AddResponseCompression();
