@@ -14,15 +14,18 @@ namespace BlazorS7Upload.Authentication
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHostEnvironment _env;
         private readonly IUserRolesService _userRolesService;
+        private readonly IConfiguration _configuration;
 
         public IapAuthenticationStateProvider(
             IHttpContextAccessor httpContextAccessor,
             IWebHostEnvironment env,
-            IUserRolesService userRolesService)
+            IUserRolesService userRolesService,
+            IConfiguration configuration)
         {
             _httpContextAccessor = httpContextAccessor;
             _env = env;
             _userRolesService = userRolesService;
+            _configuration = configuration;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -59,15 +62,30 @@ namespace BlazorS7Upload.Authentication
             if (string.IsNullOrEmpty(email))
                 return anonymous;
 
-            // Obtener roles desde PostgreSQL
+            // ── Bypass temporal para pruebas en Cloud Run mientras la conexión a
+            // Postgres no esté lista. Solo aplica al email exacto configurado en
+            // Dev:BypassEmail — nadie más se ve afectado. QUITAR estas env vars
+            // (Dev__BypassEmail / Dev__BypassRole) apenas termine la prueba.
+            var bypassEmail = _configuration["Dev:BypassEmail"];
+            var bypassRole = _configuration["Dev:BypassRole"];
+
             List<string> roles;
-            try
+            if (!string.IsNullOrEmpty(bypassEmail) && !string.IsNullOrEmpty(bypassRole)
+                && string.Equals(email, bypassEmail, StringComparison.OrdinalIgnoreCase))
             {
-                roles = await _userRolesService.GetListRolesByUser(email);
+                roles = new List<string> { bypassRole };
             }
-            catch
+            else
             {
-                roles = new List<string>();
+                // Obtener roles desde PostgreSQL
+                try
+                {
+                    roles = await _userRolesService.GetListRolesByUser(email);
+                }
+                catch
+                {
+                    roles = new List<string>();
+                }
             }
 
             var claims = new List<Claim>

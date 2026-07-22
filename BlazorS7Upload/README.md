@@ -1,132 +1,95 @@
 # Pandora Exclusiones
 
-Aplicación web interna desarrollada en **Blazor Server (.NET 8)** para la gestión de exclusiones de KPI en el proceso de Soporte de marketplace (Falabella). Permite a los equipos de operaciones consultar órdenes desde Google BigQuery y registrar exclusiones de forma individual, masiva o mediante homologación.
+Aplicacion interna en Blazor Server para gestion de exclusiones de KPI de marketplace. Permite consultar ordenes desde BigQuery y registrar exclusiones individuales o masivas por pais.
 
----
+## Estado actual
 
-## Tecnologías principales
+- Framework: ASP.NET Core 9 (Blazor Server)
+- Runtime local: .NET 9
+- Auth/SSO en produccion: Google IAP
+- Hosting objetivo de produccion: Cloud Run (proyecto flb-rtl-3p-sx-reg-dev, region us-east4) detras de HTTPS Load Balancer + IAP
 
-| Capa | Tecnología |
-|---|---|
-| Framework | ASP.NET Core 8 – Blazor Server |
-| UI | Blazor Bootstrap 2.2.0 |
-| Base de datos | PostgreSQL (Npgsql + EF Core 8 + Dapper) |
-| Data warehouse | Google BigQuery (Google.Cloud.BigQuery.V2) |
-| Tiempo real | ASP.NET Core SignalR |
-| Excel | ClosedXML |
-| FTP | FluentFTP |
-| Autenticación | Custom Claims + ProtectedLocalStorage |
+## Arquitectura funcional
 
----
+- Frontend: Blazor Server
+- Datos operativos: PostgreSQL por Npgsql + Dapper
+- Consulta de ordenes: Google BigQuery
+- Componentes UI: Blazor Bootstrap
 
-## Estructura del proyecto
+## Funcionalidades principales
+
+- Gestion de exclusiones:
+  - Individual
+  - Masivo
+  - Homologacion
+- Consulta de ordenes por pais (CO, CL, PE)
+- Gestion de roles de usuario para autorizacion funcional
+
+## Estructura relevante
 
 ```
 BlazorS7Upload/
-├── Authentication/          # Proveedor de autenticación custom, modelos de sesión y roles
-├── Data/                    # Servicios de negocio (ExclusionesService)
-├── DB/                      # DbContext de PostgreSQL (PSqlComplianceDbContext)
-├── Helpers/                 # Utilidades: paginación, filtros, Excel, CSV, conversiones
-├── Interfaces/              # IExclusionesService, IUserRolesService
-├── Models/                  # Modelos de datos (ExclusionesModel, KPI, Motivos, etc.)
-├── Pages/                   # Páginas Razor (Index, Login, Exclusiones, Configuración)
-│   └── Components/          # Componentes reutilizables (Sidebar, Modales, Dropdowns, etc.)
-├── Shared/                  # Layout principal y NavMenu
-├── wwwroot/                 # Archivos estáticos (CSS, JS)
-├── Program.cs               # Configuración de servicios y pipeline HTTP
-├── appsettings.json         # Configuración de conexiones y BigQuery
-├── mycreds.json             # Credenciales de Google Cloud (no versionar)
-└── ftp.json                 # Configuración FTP (no versionar)
+  Authentication/            # IapAuthenticationStateProvider
+  Data/                      # ExclusionesService
+  Interfaces/                # IExclusionesService, IUserRolesService
+  Models/                    # Modelos de dominio
+  Pages/                     # Vistas Razor
+  Shared/                    # Layout y menu
+  Program.cs                 # Configuracion de servicios y pipeline
+  appsettings.json           # Base local sanitizada
+  appsettings.Development.json
 ```
 
----
+Nota: archivos y modulos antiguos fueron archivados en carpetas _unused para no afectar compilacion.
 
-## Funcionalidades
+## Configuracion
 
-### Exclusiones
-- **Individual**: registro de una exclusión por orden.
-- **Masivo**: selección múltiple de órdenes con KPI y motivo unificado.
-- **Homologación**: gestión de tabla de homologación de atributos.
+### Local (Development)
 
-### Consulta de órdenes
-- Consulta en tiempo real a **Google BigQuery** para validar órdenes por país (CO, CL, PE, AR).
-- Paginación, filtros dinámicos y ordenamiento en cliente.
+- Usa appsettings.Development.json para connection strings de desarrollo.
+- En local, la app expone:
+  - http://localhost:5051
+  - https://localhost:444
 
-### Gestión de usuarios (rol `administrador`)
-- Registro de nuevos usuarios.
-- Asignación y revocación de roles.
-- Cambio de contraseña.
-- Eliminación de usuarios.
+### Cloud Run (Produccion)
 
-### Autenticación
-- Login con email y contraseña (hash SHA256 + salt por email).
-- Sesión persistida en `ProtectedLocalStorage`.
-- Autorización basada en roles: `administrador`, `exclusiones`.
+La app esta preparada para leer configuracion desde secretos montados en filesystem:
 
----
+- Variable de entorno AppSettingsPath, por defecto /config/appsettings.json
+- Variable de entorno BigQuery__CredentialsPath (ejemplo: /creds/mycreds.json)
 
-## Bases de datos (PostgreSQL – red interna)
+Esto evita guardar credenciales en la imagen del contenedor.
 
-| Connection string key | Base de datos | Uso |
-|---|---|---|
-| `db_contenido` | `Users_Pandora` | Usuarios y autenticación |
-| `db_contenido_` | `prod_sx_co` | Datos de exclusiones |
-| `db_posgreSQLCompliance` | `prod_sx_compliance` | Compliance general |
+## Secretos usados en despliegue
 
----
+- appsettings_forte -> /config/appsettings.json
+- BQ_CREDENTIALS_AOVIEDO -> /creds/mycreds.json
 
-## Configuración requerida
-
-### `appsettings.json`
-```json
-{
-  "ConnectionStrings": {
-    "db_contenido": "...",
-    "db_contenido_": "...",
-    "db_posgreSQLCompliance": "..."
-  },
-  "BigQuery": {
-    "ProjectId": "<gcp-project-id>",
-    "CredentialsPath": "mycreds.json"
-  }
-}
-```
-
-### `mycreds.json`
-Archivo de credenciales de servicio de Google Cloud (Service Account JSON). **No debe ser versionado**.
-
-### `ftp.json`
-Configuración del servidor FTP para carga de archivos. **No debe ser versionado**.
-
----
-
-## Ejecución local
+## Comando de despliegue de referencia
 
 ```bash
-# Restaurar dependencias
-dotnet restore
-
-# Ejecutar en desarrollo
-dotnet run
+gcloud run deploy forte \
+  --image=us-east4-docker.pkg.dev/flb-rtl-3p-sx-reg-dev/forte-repo/forte:latest \
+  --region=us-east4 \
+  --platform=managed \
+  --port=8080 \
+  --memory=1Gi \
+  --min-instances=1 \
+  --no-allow-unauthenticated \
+  --ingress=internal-and-cloud-load-balancing \
+  --set-secrets=/config/appsettings.json=appsettings_forte:latest,/creds/mycreds.json=BQ_CREDENTIALS_AOVIEDO:latest \
+  --set-env-vars=AppSettingsPath=/config/appsettings.json,BigQuery__CredentialsPath=/creds/mycreds.json
 ```
 
-La aplicación estará disponible en:
-- `http://localhost:5051`
-- `https://localhost:444`
+## Flujo de acceso en produccion
 
----
+1. Usuario entra por HTTPS Load Balancer
+2. IAP autentica contra cuenta Google corporativa
+3. IAP reenvia request a Cloud Run
+4. La app asigna autorizacion funcional usando roles en base de datos
 
-## Roles de usuario
+## Seguridad
 
-| Rol | Acceso |
-|---|---|
-| `administrador` | Todas las páginas + gestión de usuarios y roles |
-| `exclusiones` | Página de exclusiones |
-
----
-
-## Consideraciones de seguridad
-
-- Las cadenas de conexión y credenciales **no deben subirse al repositorio**. Usar variables de entorno o secretos en producción.
-- `mycreds.json` y `ftp.json` deben estar en `.gitignore`.
-- Las contraseñas se almacenan como hash (SHA256 + salt). No se guardan en texto plano.
+- No subir credenciales reales al repositorio.
+- Mantener appsettings.json del repo en estado sanitizado.
+- Consumir secretos solo desde Secret Manager en produccion.
