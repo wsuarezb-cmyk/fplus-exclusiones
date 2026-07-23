@@ -227,7 +227,7 @@ namespace BlazorS7Upload.Data
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 var parametros = new { deliveryOrderNumber = deliveryOrderNumber };
-                string query = $"SELECT * FROM public.sx_gsc_exclusiones_co WHERE \"deliveryOrderNumber\" IN (@deliveryOrderNumber)";
+                string query = $"SELECT * FROM exclusiones.sx_gsc_exclusiones_co WHERE \"deliveryOrderNumber\" IN (@deliveryOrderNumber)";
 
                 results = await conn.QueryAsync<ExclusionesModel>(query, parametros);
             }
@@ -241,15 +241,15 @@ namespace BlazorS7Upload.Data
             using var conn = new NpgsqlConnection(_connectionString);
             if(pais == "CO")
             {
-                sql = "INSERT INTO public.sx_gsc_exclusiones_co (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
+                sql = "INSERT INTO exclusiones.sx_gsc_exclusiones_co (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
             }
             if (pais == "PE")
             {
-                sql = "INSERT INTO public.sx_gsc_exclusiones_pe (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
+                sql = "INSERT INTO exclusiones.sx_gsc_exclusiones_pe (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
             }
             if (pais == "CL")
             {
-                sql = "INSERT INTO public.sx_gsc_exclusiones_cl (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
+                sql = "INSERT INTO exclusiones.sx_gsc_exclusiones_cl (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
             }
 
 
@@ -265,7 +265,7 @@ namespace BlazorS7Upload.Data
 
             using (var conn = new NpgsqlConnection(_connectionString))
             {
-                string query = $"SELECT * FROM public.sx_gsc_exclusiones_kpi WHERE status <> 'deleted'";
+                string query = $"SELECT * FROM exclusiones.sx_gsc_exclusiones_kpi WHERE status <> 'deleted'";
 
                 results = await conn.QueryAsync<ExclusionesKpiModel>(query);
             }
@@ -278,7 +278,7 @@ namespace BlazorS7Upload.Data
 
             using var conn = new NpgsqlConnection(_connectionString);
             var parametros = new { name = _model.name };
-            var sql = @"INSERT INTO public.sx_gsc_exclusiones_kpi (name, status) VALUES(@name, 'active')";
+            var sql = @"INSERT INTO exclusiones.sx_gsc_exclusiones_kpi (name, status) VALUES(@name, 'active')";
 
             var rowsAffected = await conn.ExecuteAsync(sql, parametros);
 
@@ -290,7 +290,7 @@ namespace BlazorS7Upload.Data
 
             using var conn = new NpgsqlConnection(_connectionString);
             var parametros = new { id = _model.id, name = _model.name, status = _model.status };
-            var sql = @"UPDATE public.sx_gsc_exclusiones_kpi
+            var sql = @"UPDATE exclusiones.sx_gsc_exclusiones_kpi
                         SET name = @name,
                         status = @status
                         WHERE id = @id".Trim();
@@ -305,7 +305,7 @@ namespace BlazorS7Upload.Data
 
             using var conn = new NpgsqlConnection(_connectionString);
             var parametros = new { id = id };
-            var sql = @"UPDATE public.sx_gsc_exclusiones_kpi
+            var sql = @"UPDATE exclusiones.sx_gsc_exclusiones_kpi
                         SET status = 'deleted'
                         WHERE id = @id".Trim();
 
@@ -325,8 +325,8 @@ namespace BlazorS7Upload.Data
             using (var conn = new NpgsqlConnection(_connectionString))
             {
                 string query = $@"SELECT a.*,b.name as kpi_name 
-FROM public.sx_gsc_exclusiones_motivo AS a
-LEFT JOIN public.sx_gsc_exclusiones_kpi AS b ON b.id = a.fk_kpi
+FROM exclusiones.sx_gsc_exclusiones_motivo AS a
+LEFT JOIN exclusiones.sx_gsc_exclusiones_kpi AS b ON b.id = a.fk_kpi
 WHERE a.status <> 'deleted'";
 
                 results = await conn.QueryAsync<ExclusionesMotivoModel>(query);
@@ -339,7 +339,7 @@ WHERE a.status <> 'deleted'";
         {
             using var conn = new NpgsqlConnection(_connectionString);
             var parametros = new { fk_kpi = _model.fk_kpi, name = _model.name };
-            var sql = @"INSERT INTO public.sx_gsc_exclusiones_motivo (fk_kpi, name, status) VALUES(@fk_kpi, @name, 'active')";
+            var sql = @"INSERT INTO exclusiones.sx_gsc_exclusiones_motivo (fk_kpi, name, status) VALUES(@fk_kpi, @name, 'active')";
 
             var rowsAffected = await conn.ExecuteAsync(sql, parametros);
 
@@ -351,7 +351,7 @@ WHERE a.status <> 'deleted'";
 
             using var conn = new NpgsqlConnection(_connectionString);
             var parametros = new { id = _model.id, name = _model.name, status = _model.status };
-            var sql = @"UPDATE public.sx_gsc_exclusiones_motivo
+            var sql = @"UPDATE exclusiones.sx_gsc_exclusiones_motivo
                         SET name = @name,
                         status = @status
                         WHERE id = @id".Trim();
@@ -366,7 +366,7 @@ WHERE a.status <> 'deleted'";
 
             using var conn = new NpgsqlConnection(_connectionString);
             var parametros = new { id = id };
-            var sql = @"UPDATE public.sx_gsc_exclusiones_motivo
+            var sql = @"UPDATE exclusiones.sx_gsc_exclusiones_motivo
                         SET status = 'deleted'
                         WHERE id = @id".Trim();
 
