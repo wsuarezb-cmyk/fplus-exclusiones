@@ -65,18 +65,6 @@ box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                         <div style="font-size: 0.85rem; font-weight: 600; color: #ffffff;">@(_currentEmail ?? "usuario@falabella.com")</div>
                         <div style="font-size: 0.75rem; color: #ffffff;">Última conexión: @DateTime.Now.ToString("dd/MM HH:mm")</div>
                     </div>
-                    <AuthorizeView>
-                        <Authorized>
-                            <NavLink class="dropdown-item-modern" @onclick="NavigateToConfiguracion" role="button">
-                                <span class="bi bi-gear-fill me-3" style="color: #6c757d;"></span> 
-                                <div>
-                                    <div>Configuración</div>
-                                    <small>Ajustes de cuenta</small>
-                                </div>
-                            </NavLink>
-                        </Authorized>
-                    </AuthorizeView>
-                    
                     <div class="dropdown-divider"></div>
                     
                     <AuthorizeView>
@@ -108,11 +96,6 @@ box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
     string NavMenuCssClass => baseMenuClass + (collapseNavMenu ? " collapse" : " show");
 
     private void ToggleNavMenu() => collapseNavMenu = !collapseNavMenu;
-
-    private void NavigateToConfiguracion()
-    {
-        NavigationManager.NavigateTo("/configuracion", true);
-    }
 
     protected override async Task OnInitializedAsync()
     {

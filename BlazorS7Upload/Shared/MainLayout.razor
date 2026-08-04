@@ -4,26 +4,11 @@
 
 
 <header class="sticky-top">
-    <AuthorizeView>
-        <Authorized>
-            <NavMenu />
-        </Authorized>
-    </AuthorizeView>    
+    <NavMenu />
 </header>
 
 
 <div class="container-fluid" role="main">
-    <AuthorizeView>
-        <NotAuthorized>
-            <div class="d-flex justify-content-center align-items-center" style="height: 80vh;">
-                <div class="text-center">
-                    <h4 class="text-danger">Acceso no autorizado</h4>
-                    <p class="text-muted">No tienes permisos para acceder a esta aplicación.</p>
-                </div>
-            </div>
-        </NotAuthorized>
-    </AuthorizeView>
-
     @Body
 </div>
 
