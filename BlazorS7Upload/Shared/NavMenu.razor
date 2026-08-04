@@ -34,16 +34,12 @@ box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
                 </AuthorizeView>
                 
                 <!-- Exclusiones - Link Directo -->
-                <AuthorizeView Roles="administrador,exclusiones">
-                    <Authorized>
-                        <li class="@navItem text-nowrap nav-item-enhanced mx-1">
-                            <NavLink class="nav-link text-dark fw-bold dropdown-toggle-modern" role="button" href="exclusiones">
-                                <span class="bi bi-x-circle-fill me-2 icon-enhanced" style="color: #dc3545;" aria-hidden="true"></span>
-                                <span class="nav-text">Exclusiones</span>
-                            </NavLink>
-                        </li>
-                    </Authorized>
-                </AuthorizeView>
+                <li class="@navItem text-nowrap nav-item-enhanced mx-1">
+                    <NavLink class="nav-link text-dark fw-bold dropdown-toggle-modern" role="button" href="exclusiones">
+                        <span class="bi bi-x-circle-fill me-2 icon-enhanced" style="color: #dc3545;" aria-hidden="true"></span>
+                        <span class="nav-text">Exclusiones</span>
+                    </NavLink>
+                </li>
                    
             </ul>
         </div>
