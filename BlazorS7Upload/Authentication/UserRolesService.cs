@@ -8,12 +8,19 @@ namespace BlazorS7Upload.Authentication
     {
         private readonly IConfiguration _configuration;
         private readonly string _connectionString;
+        private readonly string _connectionStringAccesos;
+        private readonly string _appName;
         public UserRolesService(IConfiguration configuration)
         {
             _configuration = configuration;
             _connectionString = _configuration.GetConnectionString("db_contenido");
+            _connectionStringAccesos = _configuration.GetConnectionString("db_accesos");
+            _appName = _configuration["Roles:AppName"] ?? "forte";
         }
 
+        // Metodos debajo (dbo.roles / dbo.usuarios / dbo.usuarios_roles): legacy, sin ruta que
+        // los invoque hoy (ConfigurarRoles/ConfigurarUsuarios quedaron huerfanos, ver Configuracion.razor).
+        // No usar para autorizacion: la fuente de verdad es accesos.* via GetListRolesByUser.
         public async Task<int> GetRol(string rol)
         {
             IEnumerable<string> results;
@@ -42,18 +49,22 @@ namespace BlazorS7Upload.Authentication
             return results.ToList();
         }
 
+        // Roles de autorizacion funcional: se administran desde Overture (panel admin),
+        // no desde esta app. Se leen del schema accesos (ver integracion-roles.md), filtrando
+        // por la app registrada en accesos.roles_app ("forte", ver Roles:AppName).
         public async Task<List<string>> GetListRolesByUser(string email)
         {
             IEnumerable<string> results;
-            
-            using (var connection = new NpgsqlConnection(_connectionString))
+
+            using (var connection = new NpgsqlConnection(_connectionStringAccesos))
             {
-                string query = @"SELECT nombre_rol 
-              FROM dbo.usuarios AS a
-              LEFT JOIN dbo.usuarios_roles AS b ON b.fk_usuarios = a.id_usuarios
-              LEFT JOIN dbo.roles AS c ON c.id_roles = b.fk_roles
-              WHERE email = @email";
-                var parametros = new { email = email };
+                string query = @"SELECT r.nombre_rol
+              FROM accesos.usuarios_roles ur
+              JOIN accesos.sx_reg_users u ON u.id = ur.fk_usuarios
+              JOIN accesos.roles_app   ra ON ra.id = ur.fk_roles_app
+              JOIN accesos.roles       r  ON r.id_roles = ur.fk_roles
+              WHERE u.email = @email AND ra.app = @app";
+                var parametros = new { email = email.Trim().ToLowerInvariant(), app = _appName };
                 results = await connection.QueryAsync<string>(query, parametros);
             }
 

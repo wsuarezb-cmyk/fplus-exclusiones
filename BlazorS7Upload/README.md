@@ -103,32 +103,31 @@ Migrar este proyecto a Cloud Run como servicio `forte` (proyecto `flb-rtl-3p-sx-
 ## Flujo de acceso en produccion
 
 1. Usuario entra por HTTPS Load Balancer (o, temporalmente, directo por la URL con `--ingress=all` mientras no esté armado el Load Balancer)
-2. IAP autentica contra cuenta Google corporativa
-3. IAP reenvia request a Cloud Run
-4. La app asigna autorizacion funcional consultando roles en PostgreSQL (`dbo.usuarios` / `dbo.usuarios_roles` / `dbo.roles`, connection string `db_contenido`)
+2. IAP autentica contra cuenta Google corporativa y reenvia el request a Cloud Run con el header `X-Goog-Authenticated-User-Email`
+3. `IapAuthenticationStateProvider` arma la identidad del usuario y le agrega un `Claim` de rol por cada fila que encuentre en `accesos.usuarios_roles` para ese email y para la app `forte` (ver siguiente sección)
+4. `MenuExclusiones.razor` (ruta `/exclusiones`) exige `[Authorize(Roles = "operator")]` — sin ese rol asignado en Overture, el usuario ve "You are not authorized" y el link tampoco aparece en el menú
 
-## ⚠️ Acceso provisional activo — pendiente de resolver
+## Roles gestionados desde Overture (schema `accesos`)
 
-**Estado al 22 de julio de 2026:** las connection strings de PostgreSQL (`db_contenido`, `db_contenido_`, `db_posgreSQLCompliance`) dentro del secreto `appsettings_forte` todavía tienen el valor placeholder `"CONFIGURED_VIA_SECRET_MANAGER"` — no son cadenas de conexión reales. Esto hace que **cualquier consulta a Postgres falle silenciosamente** (el código atrapa la excepción y sigue), incluyendo la consulta de roles por usuario (`GetListRolesByUser`), que siempre devuelve una lista vacía sin importar qué rol tenga el usuario asignado en la base de datos real.
+La autorizacion funcional de esta app **ya no se administra localmente**. Se migró al modelo descrito en `integracion-roles.md` (compartido por el equipo de Overture SX): la app lee directamente el schema `accesos` de la instancia Cloud SQL `flb-rtl-3p-sx-reg-dev-db` (mismo proyecto `flb-rtl-3p-sx-reg-dev`), y todo alta/baja de rol por usuario se hace desde el panel admin de Overture, no desde código ni SQL manual acá.
 
-Para poder probar la vista mientras se resuelve lo anterior, se agregó un bypass acotado en `Authentication/IapAuthenticationStateProvider.cs`: si el email autenticado por IAP coincide **exactamente** con el valor de la config `Dev:BypassEmail`, se le asigna directamente el rol de `Dev:BypassRole`, sin pasar por la consulta a la base de datos. Este bypass **no afecta a ningún otro usuario** — solo al email configurado.
+- Nombre de esta app en `accesos.roles_app.app`: **`forte`** (configurable via `Roles:AppName` en `appsettings.json`).
+- Rol requerido para ver `/exclusiones`: **`operator`**.
+- Implementación: `Authentication/UserRolesService.cs` → `GetListRolesByUser(email)`, usado por `IapAuthenticationStateProvider` en cada request.
+- `Authentication/UserRolesService.cs` conserva métodos viejos contra `dbo.usuarios` / `dbo.roles` (connection string `db_contenido`) que ya no se usan para autorizar — quedaron huérfanos junto con `ConfigurarRoles.razor`/`ConfigurarUsuarios.razor`, que no están enrutados (ver `Pages/Configuracion.razor`).
 
-Configuración actual en el servicio `forte`:
-```
-Dev__BypassEmail=wsuarezb@falabella.com
-Dev__BypassRole=administrador
-```
+### ⚠️ Pendiente antes de que esto funcione en producción
 
-**Pendiente para resolver esto de forma definitiva** (en este orden):
-1. Completar las connection strings reales de Postgres en el secreto `appsettings_forte` (host, usuario, contraseña reales — posiblemente los mismos que usa `canon-compliance`, dado que comparten las mismas bases `Users_Pandora` / `prod_sx_co` / `prod_sx_compliance`).
-2. Confirmar si `forte` necesita un conector VPC para alcanzar esa base de datos (el comando de deploy actual no tiene `--vpc-connector` configurado).
-3. Verificar que la consulta real de roles funcione correctamente (ya se confirmó que el usuario `wsuarezb@falabella.com` existe en `dbo.usuarios` con rol `administrador`).
-4. **Quitar las variables `Dev__BypassEmail` y `Dev__BypassRole` del servicio** (`gcloud run services update forte --region=us-east4 --remove-env-vars=Dev__BypassEmail,Dev__BypassRole`) una vez confirmado que el flujo real de roles funciona.
-5. Evaluar si el código de bypass en `IapAuthenticationStateProvider.cs` se debe eliminar por completo o dejarlo documentado como mecanismo de emergencia (apagado por defecto, ya que sin esas env vars configuradas no hace nada).
+1. **Usuario de Postgres de solo lectura sobre `accesos.*`** (sección 5 de `integracion-roles.md`): pedir a quien administra ese schema que cree un usuario dedicado para `forte` con `GRANT SELECT` sobre `accesos.sx_reg_users`, `accesos.roles`, `accesos.roles_app`, `accesos.usuarios_roles` — no reutilizar el usuario de Overture. Con esas credenciales, cargar la connection string real en el secreto `appsettings_forte`, clave `db_accesos` (hoy placeholder `CONFIGURED_VIA_SECRET_MANAGER`).
+2. **Confirmar que `forte` está dado de alta en `accesos.roles_app`** con `app = 'forte'`. Si no existe todavía, coordinarlo con un admin de Overture desde `/dashboard/admin`.
+3. **Asignar el rol `operator` a cada persona que deba ver Exclusiones**, desde el panel de Overture (incluyendo al usuario que antes usaba el bypass temporal — ya no tiene acceso especial, depende del mismo rol que todos).
+4. Confirmar conectividad de red: `accesos` vive en el mismo proyecto (`flb-rtl-3p-sx-reg-dev`) donde corre `forte`, pero revisar si hace falta `--vpc-connector`/`--network` en el deploy (ver patrón de Overture, sección 1 de `integracion-roles.md`) — el comando de deploy actual (más abajo) no lo tiene.
+5. El bypass temporal (`Dev__BypassEmail`/`Dev__BypassRole`, email `wsuarezb@falabella.com` con rol `administrador`) ya no existe en el código. Si esas variables de entorno quedaron configuradas en el servicio `forte` de un deploy anterior, son inertes pero conviene limpiarlas: `gcloud run services update forte --region=us-east4 --remove-env-vars=Dev__BypassEmail,Dev__BypassRole`.
 
 ## Seguridad
 
 - No subir credenciales reales al repositorio.
 - Mantener appsettings.json del repo en estado sanitizado.
 - Consumir secretos solo desde Secret Manager en produccion.
-- **No dejar `--ingress=all` ni las variables `Dev__BypassEmail`/`Dev__BypassRole` activas más tiempo del necesario para pruebas** — ver sección de acceso provisional arriba.
+- No dejar `--ingress=all` activo más tiempo del necesario para pruebas.
+- La app solo debe tener permisos de **lectura** sobre `accesos.*` — nunca escribir en `usuarios_roles`/`roles`/`roles_app` desde acá (ver sección de roles arriba).

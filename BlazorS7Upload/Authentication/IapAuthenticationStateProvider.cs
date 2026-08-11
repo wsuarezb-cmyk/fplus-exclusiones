@@ -1,3 +1,4 @@
+using BlazorS7Upload.Interfaces;
 using Microsoft.AspNetCore.Components.Authorization;
 using System.Security.Claims;
 
@@ -5,20 +6,24 @@ namespace BlazorS7Upload.Authentication
 {
     /// <summary>
     /// Proveedor de autenticación basado en Google IAP (Identity-Aware Proxy).
-    /// En producción lee el header X-Goog-Authenticated-User-Email inyectado por IAP.
-    /// En Development otorga acceso libre con rol administrador.
+    /// En producción lee el header X-Goog-Authenticated-User-Email inyectado por IAP
+    /// y resuelve el rol funcional consultando accesos.* (gestionado desde Overture).
+    /// En Development otorga acceso libre con rol "operator" mock, sin tocar la base.
     /// </summary>
     public class IapAuthenticationStateProvider : AuthenticationStateProvider
     {
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHostEnvironment _env;
+        private readonly IUserRolesService _userRolesService;
 
         public IapAuthenticationStateProvider(
             IHttpContextAccessor httpContextAccessor,
-            IWebHostEnvironment env)
+            IWebHostEnvironment env,
+            IUserRolesService userRolesService)
         {
             _httpContextAccessor = httpContextAccessor;
             _env = env;
+            _userRolesService = userRolesService;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -30,6 +35,7 @@ namespace BlazorS7Upload.Authentication
                 {
                     new Claim(ClaimTypes.Email, "dev@local"),
                     new Claim(ClaimTypes.Name, "Developer"),
+                    new Claim(ClaimTypes.Role, "operator"),
                 };
                 var devIdentity = new ClaimsIdentity(devClaims, "IapDev");
                 return new AuthenticationState(new ClaimsPrincipal(devIdentity));
@@ -56,6 +62,14 @@ namespace BlazorS7Upload.Authentication
                 new Claim(ClaimTypes.Email, email),
                 new Claim(ClaimTypes.Name, email),
             };
+
+            // Rol funcional segun accesos.usuarios_roles (Overture). Si el usuario no tiene
+            // fila asignada para esta app, la lista viene vacia => sin rol => sin acceso.
+            var roles = await _userRolesService.GetListRolesByUser(email);
+            foreach (var rol in roles.Where(r => !string.IsNullOrWhiteSpace(r)))
+            {
+                claims.Add(new Claim(ClaimTypes.Role, rol));
+            }
 
             var identity = new ClaimsIdentity(claims, "IapAuth");
             return new AuthenticationState(new ClaimsPrincipal(identity));
