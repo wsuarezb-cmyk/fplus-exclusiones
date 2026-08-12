@@ -22,16 +22,16 @@ body {
 }
 
 .btn-success {
-    background-color: #D91F4D !important;
-    border-color: #D91F4D !important;
+    background-color: #daca3d !important;
+    border-color: #daca3d !important;
     color: #fff !important;
 }
 
 .btn-success:hover,
 .btn-success:focus,
 .btn-success:active {
-    background-color: #8C1232 !important;
-    border-color: #8C1232 !important;
+    background-color: #daca3d !important;
+    border-color: #daca3d !important;
 }
 
 a.navbar-brand {
@@ -99,7 +99,7 @@ a.navbar-brand {
 }
 
 .styled-table thead tr {
-    background-color: #8C1232;
+    background-color: #daca3d;
     color: #ffffff;
     text-align: left;
 }
@@ -128,12 +128,12 @@ a.navbar-brand {
 }
 
     .styled-table tbody tr:last-of-type {
-        border-bottom: 2px solid #D91F4D;
+        border-bottom: 2px solid #daca3d;
     }
 
     .styled-table tbody tr.active-row {
         font-weight: bold;
-        color: #D91F4D;
+        color: #daca3d;
     }
 
 .styled-table thead tr:first-child th:first-child {
@@ -191,7 +191,7 @@ a.navbar-brand {
 
         .color-dropdown-content a:hover {
             background: linear-gradient(135deg, rgba(217,31,77,0.1) 0%, rgba(217,31,77,0.1) 100%);
-            color: #8C1232 !important;
+            color: #daca3d !important;
             transform: translateX(5px);
         }
 
@@ -537,7 +537,7 @@ a.navbar-brand {
     position: relative;
     z-index: 1030;
     background: #FFFFFF;
-    border-top: 3px solid #D91F4D;
+    border-top: 3px solid #daca3d;
     border-radius: 0 0 15px 15px;
     box-shadow: 0 2px 6px rgba(0,0,0,0.08);
     display: flex;
@@ -661,7 +661,7 @@ a.navbar-brand {
     cursor: pointer;
     transition: background 0.12s ease;
 }
-.sidebar-toggle:hover { background: rgba(217,31,77,0.12); color: #A81839; }
+.sidebar-toggle:hover { background: rgba(217,31,77,0.12); color: #daca3d; }
 .forte-sidebar.collapsed .sidebar-toggle { justify-content: center; }
 
 .sidebar-app-nav {
@@ -686,11 +686,11 @@ a.navbar-brand {
 }
 .sidebar-item:hover {
     background: rgba(217,31,77,0.12);
-    color: #A81839;
+    color: #daca3d;
 }
 .sidebar-item.active {
     background: rgba(217,31,77,0.12);
-    color: #A81839;
+    color: #daca3d;
 }
 .forte-sidebar.collapsed .sidebar-item { justify-content: center; }
 .forte-sidebar.collapsed .sidebar-label { display: none; }
