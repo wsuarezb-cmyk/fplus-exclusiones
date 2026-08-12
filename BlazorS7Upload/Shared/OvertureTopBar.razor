@@ -1,0 +1,95 @@
+@inject NavigationManager NavigationManager
+@inject AuthenticationStateProvider authStateProvider
+
+<header class="forte-navbar">
+
+    <!-- Marca Overture SX (redirige al portal) -->
+    <a href="https://foverture-sx-396556777333.us-east4.run.app/dashboard"
+       class="overture-brand"
+       title="Ir a Overture SX">
+        <span class="overture-brand-text">Overture<span class="overture-sx">SX</span></span>
+        <div class="overture-brand-bars">
+            <span style="background:#5BA64A; height:10px;"></span>
+            <span style="background:#3B5BA5; height:13px;"></span>
+            <span style="background:#D91F4D; height:11px;"></span>
+            <span style="background:#9E9E9E; height:8px;"></span>
+        </div>
+    </a>
+
+    <!-- Separador -->
+    <span class="brand-separator" aria-hidden="true"></span>
+
+    <!-- Marca Forte -->
+    <div class="forte-brand-only">
+        <span class="forte-brand-text">FORTE</span>
+        <span class="forte-brand-subtitle">Sistema de Gestión</span>
+    </div>
+
+    <div style="flex:1"></div>
+
+    <!-- User profile section -->
+    <div class="dropdown-modern">
+        <AuthorizeView>
+            <Authorized>
+                <span class="dropdown-toggle-modern d-flex align-items-center gap-2">
+                    <div class="user-avatar rounded-circle d-flex align-items-center justify-content-center text-white fw-bold"
+                         style="width:32px; height:32px; font-size:0.7rem; background:#D91F4D;">@GetInitials()</div>
+                    <div class="user-info d-none d-lg-block">
+                        <div>@(_currentEmail?.Split('@')[0] ?? context.User.Identity.Name)</div>
+                        <div style="font-size:0.65rem;">Conectado</div>
+                    </div>
+                    <span class="dropdown-arrow ms-1">▼</span>
+                </span>
+            </Authorized>
+        </AuthorizeView>
+        <div class="dropdown-content-modern py-1" style="min-width:220px; right:0; left:auto;">
+            <div class="dropdown-header">
+                <span class="bi bi-person-circle me-2"></span> Perfil de Usuario
+            </div>
+            <AuthorizeView>
+                <Authorized Context="userCtx">
+                    <NavLink class="dropdown-item-modern" @onclick="NavigateToConfiguracion" role="button">
+                        <span class="bi bi-gear-fill me-2"></span>
+                        <div>
+                            <div>Configuración</div>
+                            <small>Ajustes de cuenta</small>
+                        </div>
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
+            <div class="dropdown-divider"></div>
+            <AuthorizeView>
+                <Authorized Context="logoutCtx">
+                    <NavLink class="dropdown-item-logout" href="logout">
+                        <span class="bi bi-box-arrow-right me-2"></span>
+                        <div>
+                            <div>Cerrar Sesión</div>
+                            <small>Finalizar sesión actual</small>
+                        </div>
+                    </NavLink>
+                </Authorized>
+            </AuthorizeView>
+        </div>
+    </div>
+
+</header>
+
+@code {
+    private string _currentEmail;
+
+    private void NavigateToConfiguracion() => NavigationManager.NavigateTo("/configuracion", true);
+
+    private string GetInitials()
+    {
+        var user = (_currentEmail ?? "").Split('@')[0];
+        if (user.Length >= 2) return user.Substring(0, 2).ToUpper();
+        if (user.Length == 1) return user.ToUpper();
+        return "U";
+    }
+
+    protected override async Task OnInitializedAsync()
+    {
+        var authState = await authStateProvider.GetAuthenticationStateAsync();
+        _currentEmail = authState.User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+    }
+}

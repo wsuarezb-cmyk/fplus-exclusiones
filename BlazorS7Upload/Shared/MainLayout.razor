@@ -1,14 +1,39 @@
-﻿@inherits LayoutComponentBase
+@inherits LayoutComponentBase
+@using BlazorS7Upload.Pages
 
-<PageTitle>Pandora</PageTitle>
+<PageTitle>Forte</PageTitle>
 
+<div class="d-flex" style="height:100vh; overflow:hidden;">
 
-<header class="sticky-top">
-    <NavMenu />
-</header>
+    <AuthorizeView>
+        <Authorized>
+            <NavMenu @bind-Collapsed="_sidebarCollapsed" />
+        </Authorized>
+    </AuthorizeView>
 
+    <div class="d-flex flex-column flex-grow-1" style="overflow:hidden; min-width:0;">
 
-<div class="container-fluid" role="main">
-    @Body
+        <AuthorizeView>
+            <Authorized>
+                <OvertureTopBar />
+            </Authorized>
+        </AuthorizeView>
+
+        <div class="container-fluid main-content p-0 flex-grow-1" style="overflow-y:auto;" role="main">
+            <AuthorizeView>
+                <NotAuthorized>
+                    <div class="container p-5 text-center">
+                        <h4>Acceso no autorizado</h4>
+                        <p>Tu cuenta no tiene permisos para acceder a esta aplicación. Contacta al administrador.</p>
+                    </div>
+                </NotAuthorized>
+            </AuthorizeView>
+
+            @Body
+        </div>
+    </div>
 </div>
 
+@code {
+    private bool _sidebarCollapsed = false;
+}

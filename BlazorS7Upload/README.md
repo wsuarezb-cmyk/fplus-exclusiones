@@ -1,4 +1,4 @@
-# Pandora Exclusiones
+# Forte Exclusiones
 
 Aplicacion interna en Blazor Server para gestion de exclusiones de KPI de marketplace. Permite consultar ordenes desde BigQuery y registrar exclusiones individuales o masivas por pais.
 
@@ -116,13 +116,18 @@ La autorizacion funcional de esta app **ya no se administra localmente**. Se mig
 - Implementación: `Authentication/UserRolesService.cs` → `GetListRolesByUser(email)`, usado por `IapAuthenticationStateProvider` en cada request.
 - `Authentication/UserRolesService.cs` conserva métodos viejos contra `dbo.usuarios` / `dbo.roles` (connection string `db_contenido`) que ya no se usan para autorizar — quedaron huérfanos junto con `ConfigurarRoles.razor`/`ConfigurarUsuarios.razor`, que no están enrutados (ver `Pages/Configuracion.razor`).
 
-### ⚠️ Pendiente antes de que esto funcione en producción
+### Estado (12 de agosto de 2026)
 
-1. **Usuario de Postgres de solo lectura sobre `accesos.*`** (sección 5 de `integracion-roles.md`): pedir a quien administra ese schema que cree un usuario dedicado para `forte` con `GRANT SELECT` sobre `accesos.sx_reg_users`, `accesos.roles`, `accesos.roles_app`, `accesos.usuarios_roles` — no reutilizar el usuario de Overture. Con esas credenciales, cargar la connection string real en el secreto `appsettings_forte`, clave `db_accesos` (hoy placeholder `CONFIGURED_VIA_SECRET_MANAGER`).
-2. **Confirmar que `forte` está dado de alta en `accesos.roles_app`** con `app = 'forte'`. Si no existe todavía, coordinarlo con un admin de Overture desde `/dashboard/admin`.
-3. **Asignar el rol `operator` a cada persona que deba ver Exclusiones**, desde el panel de Overture (incluyendo al usuario que antes usaba el bypass temporal — ya no tiene acceso especial, depende del mismo rol que todos).
-4. Confirmar conectividad de red: `accesos` vive en el mismo proyecto (`flb-rtl-3p-sx-reg-dev`) donde corre `forte`, pero revisar si hace falta `--vpc-connector`/`--network` en el deploy (ver patrón de Overture, sección 1 de `integracion-roles.md`) — el comando de deploy actual (más abajo) no lo tiene.
-5. El bypass temporal (`Dev__BypassEmail`/`Dev__BypassRole`, email `wsuarezb@falabella.com` con rol `administrador`) ya no existe en el código. Si esas variables de entorno quedaron configuradas en el servicio `forte` de un deploy anterior, son inertes pero conviene limpiarlas: `gcloud run services update forte --region=us-east4 --remove-env-vars=Dev__BypassEmail,Dev__BypassRole`.
+1. **Conectividad de red: resuelta.** `gcloud run services describe forte` confirma que el servicio ya tiene `Network=flb-rtl-3p-sx-reg-dev-vpc`, `Subnet=flb-rtl-3p-sx-reg-dev-subnet`, `Egress=private-ranges-only` — el mismo patrón que pide `integracion-roles.md` sección 1. No hace falta tocar el deploy para esto.
+2. **Usuario de Postgres para `db_accesos`: se usa el usuario admin compartido (`admin-3p-sx-reg-dev-db`), no uno dedicado de solo lectura.** El admin de la base no puede crear roles nuevos en esta instancia, así que no se siguió la recomendación de la sección 5 de `integracion-roles.md` (usuario propio de solo lectura). Mitigación: el código de esta app (`UserRolesService.GetListRolesByUser`) solo hace `SELECT` sobre `accesos.*`, nunca escribe — pero a nivel de base de datos ese usuario sí tiene permisos de escritura sobre todo, así que si en algún momento se puede crear un usuario dedicado, migrar a eso.
+   - IP privada de la instancia: `10.166.0.3` (puerto 5432, base `postgres`).
+   - Connection string cargada en el secreto `appsettings_forte`, clave `ConnectionStrings:db_accesos`.
+3. **Pendiente: confirmar que `forte` está dado de alta en `accesos.roles_app`** con `app = 'forte'`, y que el rol `operator` existe en `accesos.roles`. Si no, insertarlo (ver sección de roles arriba — idealmente vía panel de Overture; si no hay acceso al panel, se puede hacer por SQL directo dado que ya se administra la base).
+4. **Pendiente: asignar el rol `operator` a cada persona que deba ver Exclusiones** en `accesos.usuarios_roles` (incluyendo al usuario que antes usaba el bypass temporal — ya no tiene acceso especial, depende del mismo rol que todos).
+5. **Pendiente: limpiar las variables de entorno del bypass viejo.** El código de `Dev__BypassEmail`/`Dev__BypassRole` ya no existe (se quitó junto con el resto del control por roles viejo), pero el servicio `forte` todavía las tiene seteadas (`Dev__BypassEmail=wsuarezb@falabella.com`, `Dev__BypassRole=administrador`, ver `gcloud run services describe forte`). Son inertes pero conviene sacarlas:
+   ```bash
+   gcloud run services update forte --region=us-east4 --remove-env-vars=Dev__BypassEmail,Dev__BypassRole
+   ```
 
 ## Seguridad
 
