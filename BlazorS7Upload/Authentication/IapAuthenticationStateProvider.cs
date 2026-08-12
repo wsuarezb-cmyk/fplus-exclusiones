@@ -15,15 +15,18 @@ namespace BlazorS7Upload.Authentication
         private readonly IHttpContextAccessor _httpContextAccessor;
         private readonly IWebHostEnvironment _env;
         private readonly IUserRolesService _userRolesService;
+        private readonly ILogger<IapAuthenticationStateProvider> _logger;
 
         public IapAuthenticationStateProvider(
             IHttpContextAccessor httpContextAccessor,
             IWebHostEnvironment env,
-            IUserRolesService userRolesService)
+            IUserRolesService userRolesService,
+            ILogger<IapAuthenticationStateProvider> logger)
         {
             _httpContextAccessor = httpContextAccessor;
             _env = env;
             _userRolesService = userRolesService;
+            _logger = logger;
         }
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
@@ -65,10 +68,20 @@ namespace BlazorS7Upload.Authentication
 
             // Rol funcional segun accesos.usuarios_roles (Overture). Si el usuario no tiene
             // fila asignada para esta app, la lista viene vacia => sin rol => sin acceso.
-            var roles = await _userRolesService.GetListRolesByUser(email);
-            foreach (var rol in roles.Where(r => !string.IsNullOrWhiteSpace(r)))
+            // Si la consulta falla (ej. connection string de accesos aun no configurada, o
+            // problema de red hacia la base), no debe tumbar el circuito de Blazor para todos
+            // los usuarios: se trata igual que "sin rol" y queda logueado para diagnostico.
+            try
             {
-                claims.Add(new Claim(ClaimTypes.Role, rol));
+                var roles = await _userRolesService.GetListRolesByUser(email);
+                foreach (var rol in roles.Where(r => !string.IsNullOrWhiteSpace(r)))
+                {
+                    claims.Add(new Claim(ClaimTypes.Role, rol));
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "No se pudo resolver el rol de {Email} contra accesos.*", email);
             }
 
             var identity = new ClaimsIdentity(claims, "IapAuth");
