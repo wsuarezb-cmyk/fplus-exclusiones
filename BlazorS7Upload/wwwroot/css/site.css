@@ -100,7 +100,7 @@ a.navbar-brand {
 
 .styled-table thead tr {
     background-color: #daca3d;
-    color: #ffffff;
+    color: #000000;
     text-align: left;
 }
 
@@ -190,7 +190,7 @@ a.navbar-brand {
     }
 
         .color-dropdown-content a:hover {
-            background: linear-gradient(135deg, rgba(217,31,77,0.1) 0%, rgba(217,31,77,0.1) 100%);
+            background: linear-gradient(135deg, rgba(218,202,61,0.1) 0%, rgba(218,202,61,0.1) 100%);
             color: #daca3d !important;
             transform: translateX(5px);
         }
@@ -202,7 +202,7 @@ a.navbar-brand {
 }
 
 .color-dropdown:hover .color-dropbtn {
-    background-color: rgba(217,31,77,0.1);
+    background-color: rgba(218,202,61,0.1);
 }
 
 /* Estilos para los nav-links antiguos en dropdown */
@@ -216,22 +216,22 @@ a.navbar-brand {
 }
 
 .color-dropdown .nav-link:hover {
-    background-color: rgba(217,31,77,0.15) !important;
+    background-color: rgba(218,202,61,0.15) !important;
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(217,31,77,0.2);
+    box-shadow: 0 4px 12px rgba(218,202,61,0.2);
 }
 
 /*Fin del DropDown Custom*/
 
 .user-avatar {
-    box-shadow: 0 2px 8px rgba(217,31,77,0.2);
+    box-shadow: 0 2px 8px rgba(218,202,61,0.2);
     transition: all 0.3s ease;
     border: 2px solid rgba(255,255,255,0.8);
 }
 
 .user-avatar:hover {
     transform: scale(1.1);
-    box-shadow: 0 4px 16px rgba(217,31,77,0.3);
+    box-shadow: 0 4px 16px rgba(218,202,61,0.3);
 }
 
 .user-info {
@@ -268,20 +268,20 @@ a.navbar-brand {
     color: #333 !important;
     font-weight: 600 !important;
     background: rgba(255,255,255,0.3);
-    border: 1px solid rgba(217,31,77,0.2);
+    border: 1px solid rgba(218,202,61,0.2);
 }
 
 .dropdown-toggle-modern:hover {
-    background: linear-gradient(135deg, rgba(217,31,77,0.15) 0%, rgba(217,31,77,0.1) 100%);
+    background: linear-gradient(135deg, rgba(218,202,61,0.15) 0%, rgba(218,202,61,0.1) 100%);
     transform: scale(1.02);
-    box-shadow: 0 4px 12px rgba(217,31,77,0.2);
-    border-color: rgba(217,31,77,0.4);
+    box-shadow: 0 4px 12px rgba(218,202,61,0.2);
+    border-color: rgba(218,202,61,0.4);
 }
 
 .dropdown-arrow {
     font-size: 0.7rem;
     transition: transform 0.3s ease;
-    color: #D91F4D;
+    color: #daca3d;
 }
 
 .dropdown-modern:hover .dropdown-arrow {
@@ -299,7 +299,7 @@ a.navbar-brand {
     border-radius: 15px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.12);
     backdrop-filter: blur(20px);
-    border: 1px solid rgba(217,31,77,0.2);
+    border: 1px solid rgba(218,202,61,0.2);
     z-index: 1000;
     transform: translateY(-10px);
     transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
@@ -322,7 +322,7 @@ a.navbar-brand {
     letter-spacing: 0.5px;
     padding: 0.5rem 1rem;
     border-bottom: 1px solid rgba(0,0,0,0.1);
-    background: rgba(217,31,77,0.05);
+    background: rgba(218,202,61,0.05);
     margin: 0;
     display: flex;
     align-items: center;
@@ -354,7 +354,7 @@ a.navbar-brand {
     left: -100%;
     width: 100%;
     height: 100%;
-    background: linear-gradient(90deg, transparent, rgba(217,31,77,0.1), transparent);
+    background: linear-gradient(90deg, transparent, rgba(218,202,61,0.1), transparent);
     transition: left 0.4s ease;
 }
 
@@ -363,24 +363,24 @@ a.navbar-brand {
 }
 
 .dropdown-item-modern:hover {
-    background: linear-gradient(135deg, rgba(217,31,77,0.12) 0%, rgba(217,31,77,0.08) 100%);
-    color: #8C1232 !important;
+    background: linear-gradient(135deg, rgba(218,202,61,0.12) 0%, rgba(218,202,61,0.08) 100%);
+    color: #daca3d !important;
     transform: translateX(5px) scale(1.01);
-    box-shadow: 0 3px 8px rgba(217,31,77,0.2);
-    border-color: rgba(217,31,77,0.3);
+    box-shadow: 0 3px 8px rgba(218,202,61,0.2);
+    border-color: rgba(218,202,61,0.3);
 }
 
 .dropdown-item-modern .bi {
     transition: all 0.3s ease;
     font-size: 1rem;
-    color: #D91F4D;
+    color: #daca3d;
     flex-shrink: 0;
     width: 1.2rem;
     text-align: center;
 }
 
 .dropdown-item-modern:hover .bi {
-    color: #8C1232;
+    color: #daca3d;
     transform: scale(1.1);
 }
 
@@ -661,7 +661,7 @@ a.navbar-brand {
     cursor: pointer;
     transition: background 0.12s ease;
 }
-.sidebar-toggle:hover { background: rgba(217,31,77,0.12); color: #daca3d; }
+.sidebar-toggle:hover { background: rgba(218,202,61,0.12); color: #daca3d; }
 .forte-sidebar.collapsed .sidebar-toggle { justify-content: center; }
 
 .sidebar-app-nav {
@@ -685,12 +685,12 @@ a.navbar-brand {
     white-space: nowrap;
 }
 .sidebar-item:hover {
-    background: rgba(217,31,77,0.12);
-    color: #daca3d;
+    background: rgba(218,202,61,0.25);
+    color: #000000;
 }
 .sidebar-item.active {
-    background: rgba(217,31,77,0.12);
-    color: #daca3d;
+    background: rgba(218,202,61,0.25);
+    color: #000000;
 }
 .forte-sidebar.collapsed .sidebar-item { justify-content: center; }
 .forte-sidebar.collapsed .sidebar-label { display: none; }
