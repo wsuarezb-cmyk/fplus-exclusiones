@@ -256,18 +256,25 @@
 
         var vueltas = Math.Ceiling((decimal)total / division);
 
+        int maxConcurrency = 5;
+        var semaphore = new SemaphoreSlim(maxConcurrency);
 
         List<Task> tasks = new List<Task>();
         for (var i = 0; i < vueltas; i++)
         {
-            int maxConcurrency = 5; // Número máximo de solicitudes concurrentes
-            SemaphoreSlim semaphore = new SemaphoreSlim(maxConcurrency);
-
             await semaphore.WaitAsync();
-            tasks.Add(ConsultarSoloOrdenes(ordenes.Skip(i * division).Take(division).ToList(), semaphore));
+            var bloque = ordenes.Skip(i * division).Take(division).ToList();
+            tasks.Add(ConsultarSoloOrdenes(bloque, semaphore));
         }
 
         await Task.WhenAll(tasks);
+
+        if (_modelExclusionesList.Count() == 0)
+        {
+            _mensaje = "No se encontraron resultados para la consulta.";
+            _isConsulting = false;
+            return;
+        }
 
         ElementosSeleccionados = ElementosPorPagina;
         Paginador = new Paginacion<ExclusionesModel>(_modelExclusionesList, ElementosSeleccionados);
@@ -277,11 +284,17 @@
 
     }
 
+    private readonly object _lockResultados = new();
+
     async Task ConsultarSoloOrdenes(List<string> ordenes, SemaphoreSlim semaphore)
     {
         var result = await _exclusionesService.ConsultarOrdenesBigQ(ordenes, paisSeleccionado, semaphore);
-        _modelExclusionesList.AddRange(result ?? new List<ExclusionesModel>());
+        lock (_lockResultados)
+        {
+            _modelExclusionesList.AddRange(result ?? new List<ExclusionesModel>());
+        }
     }
+
 
     private async Task GuardarOrdenes(string usuario)
     {
