@@ -78,6 +78,7 @@ namespace BlazorS7Upload.Data
                         FROM t_orders AS a
                         LEFT JOIN `txd-fal-corp-3p-acc-wbx.acc_fal_reg_catalog_sellin.svw_tc_sc_bi_bigdata_dtl_fcom_prd_trf_corp_drmb_sllm_svw_gsc_production_seller` AS c ON c.short_code = a.seller_id
                         WHERE a.delivery_order_number IN UNNEST(@parametro)
+                        AND c.short_code IS NOT NULL
                         AND IF(a.fk_operator = 1, 'CL',
                         IF(a.fk_operator = 2, 'PE',
                         IF(a.fk_operator = 3, 'CO',
@@ -174,6 +175,7 @@ namespace BlazorS7Upload.Data
                 LEFT JOIN `txd-fal-corp-3p-acc-wbx.acc_fal_reg_catalog_sellin.svw_tc_sc_bi_bigdata_dtl_fcom_prd_trf_corp_drmb_sllm_svw_gsc_production_seller` AS c ON c.short_code = a.seller_id
                 LEFT JOIN `bi-fcom-drmb-sell-in-sbx.sandbox_avicunac.t_log_sx_gsc_exclusiones_co` AS d ON d.deliveryOrderNumber = a.delivery_order_number AND a.fk_operator = 3
                 WHERE a.delivery_order_number IN UNNEST(@parametro)
+                AND c.short_code IS NOT NULL
                 AND IF(a.fk_operator = 1, 'CL',
                 IF(a.fk_operator = 2, 'PE',
                 IF(a.fk_operator = 3, 'CO',
