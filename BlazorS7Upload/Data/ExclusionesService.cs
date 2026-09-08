@@ -64,7 +64,7 @@ namespace BlazorS7Upload.Data
                         )
 
                         SELECT DISTINCT CAST(CURRENT_DATE('America/Bogota') AS STRING) as date,
-                        c.short_code as sellerId,
+                        COALESCE(c.short_code, '') as sellerId,
                         a.delivery_order_number as deliveryOrderNumber,
                         '' AS itemId,
                         '' AS sku_falabella,
@@ -94,15 +94,16 @@ namespace BlazorS7Upload.Data
                     {
                         ExclusionesModel exclusion = new ExclusionesModel
                         {
-                            date = fila["date"].ToString(),
-                            sellerId = fila["sellerId"].ToString(),
-                            deliveryOrderNumber = fila["deliveryOrderNumber"].ToString(),
-                            itemId = fila["itemId"].ToString(),
-                            sku_falabella = fila["sku_falabella"].ToString(),
-                            responsable = fila["responsable"].ToString(),
-                            motivo = fila["motivo"].ToString(),
-                            kpi_name = fila["kpi_name"].ToString(),
-                            pais = fila["pais"].ToString()
+                            date = fila["date"]?.ToString() ?? string.Empty,
+                            sellerId = fila["sellerId"]?.ToString() ?? string.Empty,
+                            deliveryOrderNumber = fila["deliveryOrderNumber"]?.ToString() ?? string.Empty,
+                            itemId = fila["itemId"]?.ToString() ?? string.Empty,
+                            sku_falabella = fila["sku_falabella"]?.ToString() ?? string.Empty,
+                            responsable = fila["responsable"]?.ToString() ?? string.Empty,
+                            motivo = fila["motivo"]?.ToString() ?? string.Empty,
+                            kpi_name = fila["kpi_name"]?.ToString() ?? string.Empty,
+                            pais = fila["pais"]?.ToString() ?? string.Empty,
+                            Excluido = string.Empty
                         };
 
                         exclusiones.Add(exclusion);
@@ -113,8 +114,9 @@ namespace BlazorS7Upload.Data
                 return exclusiones;
 
             }
-            catch (Exception)
+            catch (Exception ex)
             {
+                Console.WriteLine($"ERROR ConsultarOrdenesBigQ (sin semaforo): {ex}");
                 return null;
             }
 
@@ -156,7 +158,7 @@ namespace BlazorS7Upload.Data
                 )
 
                 SELECT DISTINCT CAST(CURRENT_DATE('America/Bogota') AS STRING) as date,
-                c.short_code as sellerId,
+                COALESCE(c.short_code, '') as sellerId,
                 a.delivery_order_number as deliveryOrderNumber,
                 '' AS itemId,
                 '' AS sku_falabella,
@@ -189,16 +191,16 @@ namespace BlazorS7Upload.Data
                 {
                     ExclusionesModel exclusion = new ExclusionesModel
                     {
-                        date = fila["date"].ToString(),
-                        sellerId = fila["sellerId"].ToString(),
-                        deliveryOrderNumber = fila["deliveryOrderNumber"].ToString(),
-                        itemId = fila["itemId"].ToString(),
-                        sku_falabella = fila["sku_falabella"].ToString(),
-                        responsable = fila["responsable"].ToString(),
-                        motivo = fila["motivo"].ToString(),
-                        kpi_name = fila["kpi_name"].ToString(),
-                        pais = fila["pais"].ToString(),
-                        Excluido = fila["Excluido"].ToString(),
+                        date = fila["date"]?.ToString() ?? string.Empty,
+                        sellerId = fila["sellerId"]?.ToString() ?? string.Empty,
+                        deliveryOrderNumber = fila["deliveryOrderNumber"]?.ToString() ?? string.Empty,
+                        itemId = fila["itemId"]?.ToString() ?? string.Empty,
+                        sku_falabella = fila["sku_falabella"]?.ToString() ?? string.Empty,
+                        responsable = fila["responsable"]?.ToString() ?? string.Empty,
+                        motivo = fila["motivo"]?.ToString() ?? string.Empty,
+                        kpi_name = fila["kpi_name"]?.ToString() ?? string.Empty,
+                        pais = fila["pais"]?.ToString() ?? string.Empty,
+                        Excluido = fila["Excluido"]?.ToString() ?? string.Empty,
                     };
 
                     exclusiones.Add(exclusion);
@@ -209,12 +211,12 @@ namespace BlazorS7Upload.Data
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"ERROR ConsultarOrdenesBigQ: {ex.Message}");
+                Console.WriteLine($"ERROR ConsultarOrdenesBigQ: {ex}");
                 return null;
             }
             finally 
             {
-                semaphore.Release();
+                semaphore?.Release();
             }
 
         }
