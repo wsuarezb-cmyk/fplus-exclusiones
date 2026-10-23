@@ -50,6 +50,24 @@ Nota: archivos y modulos antiguos fueron archivados en carpetas _unused para no 
 - En local, la app expone:
   - http://localhost:5051
   - https://localhost:444
+- El asistente solo se muestra a usuarios con el rol `admin` (`Agent:AllowedRoles`). Para probarlo localmente, configura `Agent__Enabled=true` y `Agent__Url` con la URL de un agente de prueba; admite HTTPS o HTTP en loopback. La URL debe usar el mismo esquema que Forte para evitar contenido mixto.
+
+Desde PowerShell, en la carpeta del repositorio:
+
+```powershell
+dotnet run --project .\BlazorS7Upload\BlazorS7Upload.csproj --launch-profile BlazorS7Upload
+```
+
+Para mostrar el panel durante la prueba, establece antes de ejecutar:
+
+```powershell
+$env:Agent__Enabled = "true"
+$env:Agent__Url = "http://localhost:<PUERTO_DEL_AGENTE>"
+```
+
+Reemplaza `<PUERTO_DEL_AGENTE>` por el puerto real del agente local. El usuario simulado de Development recibe los roles `operator` y `admin` para probar ambas vistas y el asistente. En producción, los roles se asignan desde Overture/Cloud SQL. El iframe se crea al abrir el panel por primera vez y se conserva al cerrarlo y navegar entre vistas. Estos cambios no despliegan ni modifican producción.
+
+La vista Exclusiones está autorizada para `operator` y `admin`; `operator` no muestra el asistente, que está limitado a `admin`.
 
 ### Cloud Run (Produccion)
 

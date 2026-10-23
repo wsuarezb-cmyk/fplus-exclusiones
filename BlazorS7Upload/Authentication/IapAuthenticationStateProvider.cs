@@ -39,6 +39,7 @@ namespace BlazorS7Upload.Authentication
                     new Claim(ClaimTypes.Email, "dev@local"),
                     new Claim(ClaimTypes.Name, "Developer"),
                     new Claim(ClaimTypes.Role, "operator"),
+                    new Claim(ClaimTypes.Role, "admin"),
                 };
                 var devIdentity = new ClaimsIdentity(devClaims, "IapDev");
                 return new AuthenticationState(new ClaimsPrincipal(devIdentity));

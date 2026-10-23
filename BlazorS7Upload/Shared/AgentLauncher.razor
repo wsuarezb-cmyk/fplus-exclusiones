@@ -1,0 +1,121 @@
+@using BlazorS7Upload.Models
+@using Microsoft.Extensions.Options
+@inject IOptions<AgentOptions> AgentOptionsAccessor
+
+@if (_enabled)
+{
+    <AuthorizeView Roles="@_allowedRoles">
+        <Authorized>
+            <button type="button"
+                    class="agent-fab @(_open ? "agent-fab--hidden" : "")"
+                    @onclick="Open"
+                    aria-haspopup="dialog"
+                    aria-expanded="@(_open ? "true" : "false")"
+                    aria-controls="agent-panel">
+                <span class="bi bi-stars" aria-hidden="true"></span>
+                <span class="agent-fab__label">@_options.ButtonLabel</span>
+            </button>
+
+            <aside id="agent-panel"
+                   class="agent-panel @(_open ? "agent-panel--open" : "")"
+                   role="dialog"
+                   aria-label="@_options.Title"
+                   tabindex="-1"
+                   @onkeydown="OnKeyDown">
+                <header class="agent-panel__header">
+                    <div class="agent-panel__titles">
+                        <div class="agent-panel__title">@_options.Title</div>
+                        @if (!string.IsNullOrWhiteSpace(_options.Subtitle))
+                        {
+                            <div class="agent-panel__subtitle">@_options.Subtitle</div>
+                        }
+                    </div>
+                    <button type="button"
+                            class="agent-panel__close"
+                            @onclick="Close"
+                            aria-label="Cerrar asistente">
+                        <span class="bi bi-x-lg" aria-hidden="true"></span>
+                    </button>
+                </header>
+
+                <div class="agent-panel__body">
+                    @if (_everOpened)
+                    {
+                        @if (!_frameLoaded)
+                        {
+                            <div class="agent-panel__loading">Conectando con el asistente…</div>
+                        }
+                        <iframe class="agent-panel__frame @(_frameLoaded ? "" : "agent-panel__frame--pending")"
+                                src="@_options.Url"
+                                title="@_options.Title"
+                                sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox"
+                                referrerpolicy="strict-origin"
+                                @onload="OnFrameLoaded"></iframe>
+                    }
+                </div>
+            </aside>
+        </Authorized>
+    </AuthorizeView>
+}
+
+@code {
+    private AgentOptions _options = new();
+    private string _allowedRoles;
+    private bool _enabled;
+    private bool _open;
+    private bool _everOpened;
+    private bool _frameLoaded;
+
+    protected override void OnInitialized()
+    {
+        _options = AgentOptionsAccessor.Value;
+        _options.Url = _options.Url?.Trim() ?? "";
+        _allowedRoles = string.IsNullOrWhiteSpace(_options.AllowedRoles)
+            ? null
+            : _options.AllowedRoles;
+        _enabled = _options.Enabled && IsAllowedUrl(_options.Url);
+    }
+
+    private static bool IsAllowedUrl(string url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return false;
+        }
+
+        if (url.StartsWith("/", StringComparison.Ordinal)
+            && (url.Length == 1 || (url[1] != '/' && url[1] != '\\')))
+        {
+            return true;
+        }
+
+        return Uri.TryCreate(url, UriKind.Absolute, out var uri)
+            && string.IsNullOrEmpty(uri.UserInfo)
+            && (uri.Scheme == Uri.UriSchemeHttps
+                || (uri.Scheme == Uri.UriSchemeHttp && uri.IsLoopback));
+    }
+
+    private void Open()
+    {
+        _open = true;
+        _everOpened = true;
+    }
+
+    private void Close()
+    {
+        _open = false;
+    }
+
+    private void OnFrameLoaded()
+    {
+        _frameLoaded = true;
+    }
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Escape")
+        {
+            Close();
+        }
+    }
+}

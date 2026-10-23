@@ -23,6 +23,7 @@ builder.Services.AddServerSideBlazor().AddCircuitOptions(options =>
 {
     options.DetailedErrors = true;
 });
+builder.Services.Configure<AgentOptions>(builder.Configuration.GetSection("Agent"));
 
 // Necesario para leer headers HTTP en Blazor Server (IAP)
 builder.Services.AddHttpContextAccessor();
