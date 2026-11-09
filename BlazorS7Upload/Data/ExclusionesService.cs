@@ -147,7 +147,7 @@ namespace BlazorS7Upload.Data
 
                 // Define tu consulta
                 string query = @"
-                WITH t_orders AS (
+                                      WITH t_orders AS (
                   SELECT 1 as fk_operator, seller_id, delivery_order_number FROM `txd-fal-corp-3p-acc-wbx.acc_fal_cl_tran_sellin.svw_bi_fcom_drmb_sharing_hub_sbx_svw_fcm_corp_seller_order_slor_prd_svw_vw_seller_order_cl`
                 WHERE last_modified_at >= DATE_SUB(CURRENT_DATE('America/Bogota'), INTERVAL 2 YEAR)
                 UNION ALL
@@ -172,7 +172,7 @@ namespace BlazorS7Upload.Data
                 ''))) AS pais,
                 STRING_AGG(DISTINCT IF(d.deliveryOrderNumber IS NULL, '', CONCAT('Excluido', '=', d.kpi_name))) AS Excluido
                 FROM t_orders AS a
-                LEFT JOIN `txd-fal-corp-3p-acc-wbx.acc_fal_reg_catalog_sellin.svw_tc_sc_bi_bigdata_dtl_fcom_prd_trf_corp_drmb_sllm_svw_gsc_production_seller` AS c ON c.short_code = a.seller_id
+                LEFT JOIN `tc-sc-bi-bigdata-cons-fcom-prd.svw_trf_corp_drmb_sllm.svw_gsc_production_seller` AS c ON c.short_code = a.seller_id
                 LEFT JOIN `bi-fcom-drmb-sell-in-sbx.sandbox_avicunac.t_log_sx_gsc_exclusiones_co` AS d ON d.deliveryOrderNumber = a.delivery_order_number AND a.fk_operator = 3
                 WHERE a.delivery_order_number IN UNNEST(@parametro)
                 AND c.short_code IS NOT NULL
