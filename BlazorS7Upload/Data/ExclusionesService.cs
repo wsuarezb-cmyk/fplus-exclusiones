@@ -76,7 +76,7 @@ namespace BlazorS7Upload.Data
                         IF(a.fk_operator = 3, 'Colombia',
                         ''))) AS pais
                         FROM t_orders AS a
-                        LEFT JOIN `txd-fal-corp-3p-acc-wbx.acc_fal_reg_catalog_sellin.svw_tc_sc_bi_bigdata_dtl_fcom_prd_trf_corp_drmb_sllm_svw_gsc_production_seller` AS c ON c.short_code = a.seller_id
+                        LEFT JOIN `tc-sc-bi-bigdata-cons-fcom-prd.svw_trf_corp_drmb_sllm.svw_gsc_production_seller` AS c ON c.short_code = a.seller_id
                         WHERE a.delivery_order_number IN UNNEST(@parametro)
                         AND c.short_code IS NOT NULL
                         AND IF(a.fk_operator = 1, 'CL',
