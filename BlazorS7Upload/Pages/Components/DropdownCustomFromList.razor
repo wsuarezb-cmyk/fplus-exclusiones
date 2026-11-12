@@ -4,8 +4,8 @@
 
 <div class="input-group input-group-sm">
     <span class="input-group-text bg-transparent text-white border border-0 fw-semibold" id="basic-addon1">@Title</span>
-    <select class="form-select form-select-sm border border-0" @onchange="OnChange">
-        <option value=""></option>
+    <select class="form-select form-select-sm border border-0" @onchange="OnChange" disabled="@Disabled">
+        <option value="" selected="@(SelectedValue is null || string.IsNullOrEmpty(SelectedValue?.ToString()))"></option>
         @foreach (TItem item in Items)
         {
             <option value="@item" selected="@(SelectedValue?.Equals(item) == true)">@item</option>
@@ -26,6 +26,9 @@
 
     [Parameter]
     public string Title { get; set; }
+
+    [Parameter]
+    public bool Disabled { get; set; }
 
     private async Task OnChange(ChangeEventArgs e)
     {

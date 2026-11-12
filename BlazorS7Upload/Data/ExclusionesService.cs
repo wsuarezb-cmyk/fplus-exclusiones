@@ -253,7 +253,7 @@ namespace BlazorS7Upload.Data
             }
             if (pais == "CL")
             {
-                sql = "INSERT INTO exclusiones.sx_gsc_exclusiones_cl (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
+                sql = "INSERT INTO exclusiones.sx_gsc_exclusiones_cl (date, \"sellerId\", \"deliveryOrderNumber\", \"itemId\", sku_falabella, responsable, motivo, submotivo, kpi_name, pais, comentario, tipo_exclusion) VALUES (@date, @sellerId, @deliveryOrderNumber, @itemId, @sku_falabella, @responsable, @motivo, @submotivo, @kpi_name, @pais, @comentario, @tipo_exclusion)";
             }
 
 
@@ -338,6 +338,28 @@ LEFT JOIN exclusiones.sx_gsc_exclusiones_kpi AS b ON b.id = a.fk_kpi
 WHERE a.status <> 'deleted'";
 
             var results = await conn.QueryAsync<ExclusionesMotivoModel>(query, new { pais = paisCatalogo });
+            return results.ToList();
+        }
+
+        public async Task<List<ExclusionesSubmotivoModel>> GetAllSubmotivoAsync(string pais)
+        {
+            using var conn = new NpgsqlConnection(_connectionString);
+            const string query = @"
+SELECT s.id, s.fk_motivo, s.name, s.status, s.pais,
+       m.name AS motivo_name, m.fk_kpi
+FROM exclusiones.sx_gsc_exclusiones_submotivo AS s
+JOIN exclusiones.sx_gsc_exclusiones_motivo AS m
+  ON m.id = s.fk_motivo
+ AND m.status <> 'deleted'
+JOIN exclusiones.sx_gsc_exclusiones_motivo_pais AS mp
+  ON mp.fk_motivo = s.fk_motivo
+ AND mp.pais = s.pais
+ AND mp.status <> 'deleted'
+WHERE s.status <> 'deleted'
+  AND s.pais = @pais
+ORDER BY s.name";
+
+            var results = await conn.QueryAsync<ExclusionesSubmotivoModel>(query, new { pais });
             return results.ToList();
         }
 

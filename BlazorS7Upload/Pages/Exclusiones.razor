@@ -66,7 +66,7 @@
                                         <th class="text-center">
                                             @if (StatusMasivo)
                                             {
-                                                <DropdownCustomFromList TItem="string" Title="KPI" Items="@Listado_kpi_name.Select(x => x.name).ToList()" @bind-SelectedValue="kpi_name_masivo"></DropdownCustomFromList>
+                                                <DropdownCustomFromList TItem="string" Title="KPI" Items="@Listado_kpi_name.Select(x => x.name).ToList()" SelectedValue="@kpi_name_masivo" SelectedValueChanged="OnKpiMasivoChanged"></DropdownCustomFromList>
                                             }
                                             else
                                             {
@@ -76,13 +76,31 @@
                                         <th class="text-center">
                                             @if (StatusMasivo)
                                             {
-                                                <DropdownCustomFromList TItem="string" Title="Motivo" Items="@Listado_motivos.Where(x => x.fk_kpi == Listado_kpi_name.Where(y => y.name == kpi_name_masivo).Select(y => y.id).FirstOrDefault()).Select(x => x.name).ToList()" @bind-SelectedValue="motivo_masivo"></DropdownCustomFromList>
+                                                <DropdownCustomFromList TItem="string" Title="Motivo" Items="@Listado_motivos.Where(x => x.fk_kpi == Listado_kpi_name.Where(y => y.name == kpi_name_masivo).Select(y => y.id).FirstOrDefault()).Select(x => x.name).ToList()" SelectedValue="@motivo_masivo" SelectedValueChanged="OnMotivoMasivoChanged"></DropdownCustomFromList>
                                             }else
                                             {
                                                 <span>Motivo</span>
                                             }
-                                            
                                         </th>
+                                        @if (EsChile)
+                                        {
+                                            <th class="text-center">
+                                                @if (StatusMasivo)
+                                                {
+                                                    <DropdownCustomFromList TItem="string"
+                                                                            Title="Submotivo"
+                                                                            Items="@SubmotivosDe(kpi_name_masivo, motivo_masivo)"
+                                                                            SelectedValue="@submotivo_masivo"
+                                                                            SelectedValueChanged="OnSubmotivoMasivoChanged"
+                                                                            Disabled="@(!RequiereSubmotivo(kpi_name_masivo, motivo_masivo))">
+                                                    </DropdownCustomFromList>
+                                                }
+                                                else
+                                                {
+                                                    <span>Submotivo</span>
+                                                }
+                                            </th>
+                                        }
                                         <th class="text-center">
                                             
                                             @if (StatusMasivo)
@@ -131,11 +149,27 @@
                                                 <td class="text-center">@row.sellerId</td>
                                                 <td class="text-center">@row.deliveryOrderNumber</td>
                                                 <td class="text-center">
-                                                    <DropdownCustomFromList TItem="string" Items="@Listado_kpi_name.Select(x => x.name).ToList()" @bind-SelectedValue="row.kpi_name"></DropdownCustomFromList>
+                                                    <DropdownCustomFromList TItem="string" Items="@Listado_kpi_name.Select(x => x.name).ToList()" SelectedValue="@row.kpi_name" SelectedValueChanged="@(value => OnKpiChanged(row, value))"></DropdownCustomFromList>
                                                 </td>
                                                 <td class="text-center">
-                                                    <DropdownCustomFromList TItem="string" Items="@Listado_motivos.Where(x => x.kpi_name == row.kpi_name).Select(x => x.name).ToList()" @bind-SelectedValue="row.motivo"></DropdownCustomFromList>
+                                                    <DropdownCustomFromList TItem="string" Items="@Listado_motivos.Where(x => x.kpi_name == row.kpi_name).Select(x => x.name).ToList()" SelectedValue="@row.motivo" SelectedValueChanged="@(value => OnMotivoChanged(row, value))"></DropdownCustomFromList>
                                                 </td>
+                                                @if (EsChile)
+                                                {
+                                                    <td class="text-center">
+                                                        @if (RequiereSubmotivo(row.kpi_name, row.motivo))
+                                                        {
+                                                            <DropdownCustomFromList TItem="string"
+                                                                                    Items="@SubmotivosDe(row.kpi_name, row.motivo)"
+                                                                                    @bind-SelectedValue="row.submotivo">
+                                                            </DropdownCustomFromList>
+                                                        }
+                                                        else
+                                                        {
+                                                            <span>—</span>
+                                                        }
+                                                    </td>
+                                                }
                                                 <td class="text-center"><input type="text" class="form-control form-control-sm mt-1" @bind="row.comentario" placeholder="Comentario"></td>
                                                 <td>@row.Excluido</td>
                                                 <td></td>
@@ -218,6 +252,7 @@
     bool _homologacion { get; set; } = true;
     string kpi_name_masivo { get; set; }
     string motivo_masivo { get; set; }
+    string submotivo_masivo { get; set; }
     string comentario_masivo { get; set; }
     string TitleToast { get; set; }
     ExclusionesModel _modelExclusiones { get; set; } = new();
@@ -227,6 +262,9 @@
 
     List<ExclusionesKpiModel> Listado_kpi_name = new();
     List<ExclusionesMotivoModel> Listado_motivos = new();
+    List<ExclusionesSubmotivoModel> Listado_submotivos = new();
+
+    bool EsChile => paisSeleccionado == "CL";
 
     Paginacion<ExclusionesModel> Paginador { get; set; } = new(new List<ExclusionesModel> { }, 1);
     int ElementosSeleccionados { get; set; }
@@ -238,6 +276,10 @@
         //_modelExclusionesList.Clear();
         Listado_kpi_name = await _exclusionesService.GetAllKpiAsync();
         Listado_motivos = await _exclusionesService.GetAllMotivoAsync(paisSeleccionado);
+        if (EsChile)
+        {
+            Listado_submotivos = await _exclusionesService.GetAllSubmotivoAsync("CL");
+        }
     }
 
     public async Task Consultar(string productos)
@@ -304,7 +346,35 @@
 
         var count_motivo = _modelExclusionesList.Count(x => string.IsNullOrEmpty(x.motivo));
         var count_kpi    = _modelExclusionesList.Count(x => string.IsNullOrEmpty(x.kpi_name));
-        if (count_motivo == 0 && count_kpi == 0)
+        var count_submotivo = 0;
+        var count_submotivo_invalido = 0;
+
+        if (EsChile)
+        {
+            foreach (var row in _modelExclusionesList)
+            {
+                if (string.IsNullOrWhiteSpace(row.submotivo))
+                {
+                    row.submotivo = null;
+                }
+
+                var submotivos = SubmotivosDe(row.kpi_name, row.motivo);
+                if (submotivos.Count == 0)
+                {
+                    row.submotivo = null;
+                }
+                else if (row.submotivo is null)
+                {
+                    count_submotivo++;
+                }
+                else if (!submotivos.Contains(row.submotivo))
+                {
+                    count_submotivo_invalido++;
+                }
+            }
+        }
+
+        if (count_motivo == 0 && count_kpi == 0 && count_submotivo == 0 && count_submotivo_invalido == 0)
         {
             _modelExclusionesList.ForEach((x) => x.responsable = usuario);
             _modelExclusionesList.ForEach((x) => x.tipo_exclusion = tipoSeleccionado);
@@ -315,6 +385,14 @@
         else
         {
             mensajeResponse = $"Faltan campos: {count_kpi} fila(s) sin KPI, {count_motivo} fila(s) sin Motivo.";
+            if (EsChile && count_submotivo > 0)
+            {
+                mensajeResponse += $" {count_submotivo} fila(s) sin Submotivo.";
+            }
+            if (EsChile && count_submotivo_invalido > 0)
+            {
+                mensajeResponse += $" {count_submotivo_invalido} fila(s) con Submotivo inválido.";
+            }
             TitleToast = "Warning";
         }
 
@@ -330,10 +408,83 @@
         {
             row.motivo = motivo_masivo;
             row.kpi_name = kpi_name_masivo;
+            if (EsChile) row.submotivo = submotivo_masivo;
             if (comentario_masivo != string.Empty) row.comentario = comentario_masivo;
             //row.IsSelected = false;
         });
 
+    }
+
+    private List<string> SubmotivosDe(string kpiName, string motivoName)
+    {
+        if (string.IsNullOrEmpty(kpiName) || string.IsNullOrEmpty(motivoName))
+        {
+            return new List<string>();
+        }
+
+        var idKpi = Listado_kpi_name.FirstOrDefault(k => k.name == kpiName)?.id;
+        if (idKpi is null)
+        {
+            return new List<string>();
+        }
+
+        var idMotivo = Listado_motivos
+            .FirstOrDefault(m => m.fk_kpi == idKpi.Value && m.name == motivoName)?.id;
+        if (idMotivo is null)
+        {
+            return new List<string>();
+        }
+
+        return Listado_submotivos
+            .Where(s => s.fk_motivo == idMotivo.Value)
+            .Select(s => s.name)
+            .ToList();
+    }
+
+    private bool RequiereSubmotivo(string kpiName, string motivoName) =>
+        SubmotivosDe(kpiName, motivoName).Count > 0;
+
+    private void OnKpiChanged(ExclusionesModel row, string valor)
+    {
+        row.kpi_name = valor;
+        if (EsChile)
+        {
+            row.motivo = null;
+            row.submotivo = null;
+        }
+    }
+
+    private void OnMotivoChanged(ExclusionesModel row, string valor)
+    {
+        row.motivo = valor;
+        if (EsChile)
+        {
+            row.submotivo = null;
+        }
+    }
+
+    private void OnKpiMasivoChanged(string valor)
+    {
+        kpi_name_masivo = valor;
+        if (EsChile)
+        {
+            motivo_masivo = null;
+            submotivo_masivo = null;
+        }
+    }
+
+    private void OnMotivoMasivoChanged(string valor)
+    {
+        motivo_masivo = valor;
+        if (EsChile)
+        {
+            submotivo_masivo = null;
+        }
+    }
+
+    private void OnSubmotivoMasivoChanged(string valor)
+    {
+        submotivo_masivo = valor;
     }
 
     private void EliminarOrden(ExclusionesModel row)

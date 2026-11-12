@@ -11,6 +11,7 @@ namespace BlazorS7Upload.Models
         public string sku_falabella { get; set; }
         public string responsable { get; set; }
         public string motivo { get; set; }
+        public string submotivo { get; set; }
         public string kpi_name { get; set; }
         public string pais { get; set; }
         public string comentario { get; set; }
