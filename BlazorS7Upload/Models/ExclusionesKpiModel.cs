@@ -2,7 +2,7 @@
 {
     public class ExclusionesKpiModel
     {
-        public int id { get; set; }
+        public long id { get; set; }
         public string name { get; set; }
         public string status { get; set; }
     }

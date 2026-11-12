@@ -76,7 +76,7 @@
                                         <th class="text-center">
                                             @if (StatusMasivo)
                                             {
-                                                <DropdownCustomFromList TItem="string" Title="Motivo" Items="@Listado_motivos.Where(x => x.fk_kpi.Equals(Listado_kpi_name.Where(y => y.name == kpi_name_masivo).Select(y => y.id).FirstOrDefault())).Select(x => x.name).ToList()" @bind-SelectedValue="motivo_masivo"></DropdownCustomFromList>
+                                                <DropdownCustomFromList TItem="string" Title="Motivo" Items="@Listado_motivos.Where(x => x.fk_kpi == Listado_kpi_name.Where(y => y.name == kpi_name_masivo).Select(y => y.id).FirstOrDefault()).Select(x => x.name).ToList()" @bind-SelectedValue="motivo_masivo"></DropdownCustomFromList>
                                             }else
                                             {
                                                 <span>Motivo</span>
@@ -237,7 +237,7 @@
     {
         //_modelExclusionesList.Clear();
         Listado_kpi_name = await _exclusionesService.GetAllKpiAsync();
-        Listado_motivos = await _exclusionesService.GetAllMotivoAsync();
+        Listado_motivos = await _exclusionesService.GetAllMotivoAsync(paisSeleccionado);
     }
 
     public async Task Consultar(string productos)

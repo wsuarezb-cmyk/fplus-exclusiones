@@ -69,6 +69,12 @@ Reemplaza `<PUERTO_DEL_AGENTE>` por el puerto real del agente local. El usuario 
 
 La vista Exclusiones está autorizada para `operator` y `admin`; `operator` no muestra el asistente, que está limitado a `admin`.
 
+### Catálogo de motivos por país
+
+Los motivos se definen globalmente en `exclusiones.sx_gsc_exclusiones_motivo`; su disponibilidad por país se controla mediante `exclusiones.sx_gsc_exclusiones_motivo_pais`. El catálogo de la vista filtra por país y solo muestra filas no eliminadas en ambas tablas. Los KPI continúan siendo globales. El modo `TEST` usa el catálogo de `CO`.
+
+`InsertMotivoAsync` solo inserta en la tabla global de motivos y no crea filas en `sx_gsc_exclusiones_motivo_pais`; actualmente no tiene llamadores activos. No usarlo para dar de alta motivos disponibles por país. La creación y activación por país se administra mediante operaciones SQL revisadas y aprobadas, según el runbook del plan de catálogo.
+
 ### Cloud Run (Produccion)
 
 La app esta preparada para leer configuracion desde secretos montados en filesystem:

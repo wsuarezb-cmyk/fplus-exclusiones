@@ -8,10 +8,10 @@ namespace BlazorS7Upload.Interfaces
     {
         Task<List<ExclusionesModel>> ConsultarOrdenesBigQ(List<string> parameterValues, string pais);
         Task<List<ExclusionesModel>> ConsultarOrdenesBigQ(List<string> parameterValues, string pais, SemaphoreSlim semaphore);
-        Task<string> DeleteKpiAsync(int id);
-        Task<string> DeleteMotivoAsync(int id);
+        Task<string> DeleteKpiAsync(long id);
+        Task<string> DeleteMotivoAsync(long id);
         Task<List<ExclusionesKpiModel>> GetAllKpiAsync();
-        Task<List<ExclusionesMotivoModel>> GetAllMotivoAsync();
+        Task<List<ExclusionesMotivoModel>> GetAllMotivoAsync(string pais);
         Task<List<ExclusionesModel>> GetListAsync(List<string> parameterValues);
         Task<string> InsertKpiAsync(ExclusionesKpiModel _model);
         Task<string> InsertMotivoAsync(ExclusionesMotivoModel _model);

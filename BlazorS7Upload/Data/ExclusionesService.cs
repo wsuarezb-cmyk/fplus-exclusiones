@@ -304,7 +304,7 @@ namespace BlazorS7Upload.Data
             return $"Kpi actualizado satisfactoriamente: {rowsAffected}";
         }
 
-        public async Task<string> DeleteKpiAsync(int id)
+        public async Task<string> DeleteKpiAsync(long id)
         {
 
             using var conn = new NpgsqlConnection(_connectionString);
@@ -322,20 +322,22 @@ namespace BlazorS7Upload.Data
 
         #region "Motivo de exclusiones"
 
-        public async Task<List<ExclusionesMotivoModel>> GetAllMotivoAsync()
+        public async Task<List<ExclusionesMotivoModel>> GetAllMotivoAsync(string pais)
         {
-            IEnumerable<ExclusionesMotivoModel> results;
+            var paisCatalogo = pais == "TEST" ? "CO" : pais;
 
-            using (var conn = new NpgsqlConnection(_connectionString))
-            {
-                string query = $@"SELECT a.*,b.name as kpi_name 
+            using var conn = new NpgsqlConnection(_connectionString);
+            const string query = @"
+SELECT a.id, a.fk_kpi, a.name, a.status, b.name AS kpi_name
 FROM exclusiones.sx_gsc_exclusiones_motivo AS a
+JOIN exclusiones.sx_gsc_exclusiones_motivo_pais AS mp
+  ON mp.fk_motivo = a.id
+ AND mp.pais = @pais
+ AND mp.status <> 'deleted'
 LEFT JOIN exclusiones.sx_gsc_exclusiones_kpi AS b ON b.id = a.fk_kpi
 WHERE a.status <> 'deleted'";
 
-                results = await conn.QueryAsync<ExclusionesMotivoModel>(query);
-            }
-
+            var results = await conn.QueryAsync<ExclusionesMotivoModel>(query, new { pais = paisCatalogo });
             return results.ToList();
         }
 
@@ -365,7 +367,7 @@ WHERE a.status <> 'deleted'";
             return $"Motivo actualizado satisfactoriamente: {rowsAffected}";
         }
 
-        public async Task<string> DeleteMotivoAsync(int id)
+        public async Task<string> DeleteMotivoAsync(long id)
         {
 
             using var conn = new NpgsqlConnection(_connectionString);
